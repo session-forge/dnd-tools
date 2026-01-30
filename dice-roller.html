@@ -283,6 +283,38 @@
         .hidden {
             display: none;
         }
+        
+        .instructions {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+        
+        .instructions h3 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.25rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
     </style>
 </head>
 <body>
@@ -348,6 +380,18 @@
                 <button class="clear-btn hidden" id="clearBtn">Clear History</button>
             </div>
             <div id="historyList"></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use</h3>
+            <ul>
+                <li>Click a die button multiple times to add more dice to your roll (e.g., click d6 four times for 4d6)</li>
+                <li>Use Quantity and Modifier fields to customize your roll</li>
+                <li>For d20 rolls, check Advantage or Disadvantage to roll two dice and keep the higher or lower result</li>
+                <li>Natural 20s and 1s are highlighted in green and red</li>
+                <li>Click the history button (📜) to view all your past rolls</li>
+                <li>All rolls use cryptographically secure random number generation</li>
+            </ul>
         </div>
     </div>
 
