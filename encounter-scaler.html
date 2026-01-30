@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e 2024 Encounter Scaler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8b0000 0%, #b22222 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .section h2 {
+            color: #8b0000;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #8b0000;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #8b0000;
+        }
+
+        .monster-entry {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .btn {
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #a00000;
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6678;
+        }
+
+        .btn-remove {
+            background: #dc3545;
+            padding: 8px 16px;
+        }
+
+        .btn-remove:hover {
+            background: #c82333;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .result-card {
+            background: white;
+            border: 2px solid #8b0000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-header {
+            background: #8b0000;
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 15px -20px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .result-header h3 {
+            font-size: 1.5em;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        .difficulty-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .difficulty-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .difficulty-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .monster-list {
+            margin-top: 15px;
+        }
+
+        .monster-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #8b0000;
+        }
+
+        .monster-item strong {
+            color: #8b0000;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .xp-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .xp-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .xp-box .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .xp-box .value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #8b0000;
+        }
+
+        @media (max-width: 768px) {
+            .monster-entry {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            border: 2px solid #8b0000;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-item:hover {
+            background: #f0f0f0;
+        }
+
+        .autocomplete-item strong {
+            color: #8b0000;
+        }
+
+        .monster-name-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ D&D 5e 2024 Encounter Scaler</h1>
+            <p>Scale combat encounters using 2024 DMG rules</p>
+        </div>
+
+        <div class="content">
+            <!-- Original Encounter Section -->
+            <div class="section">
+                <h2>Step 1: Original Encounter</h2>
+                
+                <div class="form-group">
+                    <label for="origLevel">Average Party Level:</label>
+                    <input type="number" id="origLevel" min="1" max="20" value="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="origPartySize">Number of Characters:</label>
+                    <input type="number" id="origPartySize" min="1" max="10" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="origDifficulty">Original Difficulty:</label>
+                    <select id="origDifficulty">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Monsters in Encounter:</label>
+                    <div id="monsterList"></div>
+                    <button class="btn btn-secondary" onclick="addMonster()">+ Add Monster</button>
+                </div>
+            </div>
+
+            <!-- Target Encounter Section -->
+            <div class="section">
+                <h2>Step 2: Target Encounter</h2>
+                
+                <div class="form-group">
+                    <label for="targetLevel">New Average Party Level:</label>
+                    <input type="number" id="targetLevel" min="1" max="20" value="6">
+                </div>
+
+                <div class="form-group">
+                    <label for="targetPartySize">New Number of Characters:</label>
+                    <input type="number" id="targetPartySize" min="1" max="10" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="targetDifficulty">Target Difficulty:</label>
+                    <select id="targetDifficulty">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <button class="btn" onclick="scaleEncounter()">Scale Encounter</button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section results" id="resultsSection">
+                <h2>Scaled Encounter Options</h2>
+                <div id="resultsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 2024 DMG XP Budgets per character
+        const xpBudgets = {
+            1: { low: 50, medium: 75, high: 100 },
+            2: { low: 100, medium: 150, high: 200 },
+            3: { low: 150, medium: 225, high: 400 },
+            4: { low: 250, medium: 375, high: 500 },
+            5: { low: 500, medium: 750, high: 1100 },
+            6: { low: 600, medium: 1000, high: 1400 },
+            7: { low: 750, medium: 1300, high: 1700 },
+            8: { low: 1000, medium: 1700, high: 2100 },
+            9: { low: 1300, medium: 2000, high: 2600 },
+            10: { low: 1600, medium: 2300, high: 3100 },
+            11: { low: 1900, medium: 2900, high: 4100 },
+            12: { low: 2200, medium: 3700, high: 4700 },
+            13: { low: 2600, medium: 4200, high: 5400 },
+            14: { low: 2900, medium: 4900, high: 6200 },
+            15: { low: 3300, medium: 5400, high: 7800 },
+            16: { low: 3800, medium: 6100, high: 9800 },
+            17: { low: 4500, medium: 7200, high: 11700 },
+            18: { low: 5000, medium: 8700, high: 14200 },
+            19: { low: 5500, medium: 10700, high: 17200 },
+            20: { low: 6400, medium: 13200, high: 22000 }
+        };
+
+        // 2024 Monster Manual creatures organized by CR and theme
+        const monsterDatabase = {
+            0: [
+                { name: "Baboon", cr: 0, xp: 10, themes: ["beast", "forest"] },
+                { name: "Badger", cr: 0, xp: 10, themes: ["beast", "forest"] },
+                { name: "Bat", cr: 0, xp: 10, themes: ["beast", "cave"] },
+                { name: "Cat", cr: 0, xp: 10, themes: ["beast", "urban"] },
+                { name: "Commoner", cr: 0, xp: 10, themes: ["humanoid", "urban"] },
+                { name: "Crab", cr: 0, xp: 10, themes: ["beast", "aquatic"] },
+                { name: "Deer", cr: 0, xp: 10, themes: ["beast", "forest"] },
+                { name: "Eagle", cr: 0, xp: 10, themes: ["beast", "sky"] },
+                { name: "Frog", cr: 0, xp: 10, themes: ["beast", "swamp"] },
+                { name: "Goat", cr: 0, xp: 10, themes: ["beast", "mountain"] },
+                { name: "Hawk", cr: 0, xp: 10, themes: ["beast", "sky"] },
+                { name: "Hyena", cr: 0, xp: 10, themes: ["beast", "desert"] },
+                { name: "Jackal", cr: 0, xp: 10, themes: ["beast", "desert"] },
+                { name: "Lizard", cr: 0, xp: 10, themes: ["beast", "desert"] },
+                { name: "Octopus", cr: 0, xp: 10, themes: ["beast", "aquatic"] },
+                { name: "Owl", cr: 0, xp: 10, themes: ["beast", "forest", "sky"] },
+                { name: "Rat", cr: 0, xp: 10, themes: ["beast", "urban"] },
+                { name: "Raven", cr: 0, xp: 10, themes: ["beast", "sky"] },
+                { name: "Scorpion", cr: 0, xp: 10, themes: ["beast", "desert"] },
+                { name: "Spider", cr: 0, xp: 10, themes: ["beast", "cave"] },
+                { name: "Vulture", cr: 0, xp: 10, themes: ["beast", "desert", "sky"] },
+                { name: "Weasel", cr: 0, xp: 10, themes: ["beast", "forest"] }
+            ],
+            0.125: [
+                { name: "Bandit", cr: 0.125, xp: 25, themes: ["humanoid", "urban", "forest"] },
+                { name: "Cultist", cr: 0.125, xp: 25, themes: ["humanoid", "cultist"] },
+                { name: "Giant Rat", cr: 0.125, xp: 25, themes: ["beast", "urban"] },
+                { name: "Goblin Minion", cr: 0.125, xp: 25, themes: ["humanoid", "goblinoid"] },
+                { name: "Guard", cr: 0.125, xp: 25, themes: ["humanoid", "urban", "military"] },
+                { name: "Kobold Warrior", cr: 0.125, xp: 25, themes: ["humanoid", "kobold", "cave"] },
+                { name: "Mastiff", cr: 0.125, xp: 25, themes: ["beast", "urban"] },
+                { name: "Noble", cr: 0.125, xp: 25, themes: ["humanoid", "urban"] },
+                { name: "Stirge", cr: 0.125, xp: 25, themes: ["beast", "cave", "swamp"] },
+                { name: "Venomous Snake", cr: 0.125, xp: 25, themes: ["beast", "swamp", "jungle"] },
+                { name: "Warrior Infantry", cr: 0.125, xp: 25, themes: ["humanoid", "military"] }
+            ],
+            0.25: [
+                { name: "Axe Beak", cr: 0.25, xp: 50, themes: ["beast", "grassland"] },
+                { name: "Boar", cr: 0.25, xp: 50, themes: ["beast", "forest"] },
+                { name: "Constrictor Snake", cr: 0.25, xp: 50, themes: ["beast", "swamp", "jungle"] },
+                { name: "Draft Horse", cr: 0.25, xp: 50, themes: ["beast", "grassland"] },
+                { name: "Elk", cr: 0.25, xp: 50, themes: ["beast", "forest"] },
+                { name: "Giant Badger", cr: 0.25, xp: 50, themes: ["beast", "forest"] },
+                { name: "Giant Bat", cr: 0.25, xp: 50, themes: ["beast", "cave"] },
+                { name: "Giant Centipede", cr: 0.25, xp: 50, themes: ["beast", "cave"] },
+                { name: "Giant Frog", cr: 0.25, xp: 50, themes: ["beast", "swamp"] },
+                { name: "Giant Lizard", cr: 0.25, xp: 50, themes: ["beast", "desert"] },
+                { name: "Giant Owl", cr: 0.25, xp: 50, themes: ["beast", "forest", "sky"] },
+                { name: "Giant Venomous Snake", cr: 0.25, xp: 50, themes: ["beast", "swamp", "jungle"] },
+                { name: "Giant Wolf Spider", cr: 0.25, xp: 50, themes: ["beast", "cave", "forest"] },
+                { name: "Goblin Warrior", cr: 0.25, xp: 50, themes: ["humanoid", "goblinoid", "forest", "cave"] },
+                { name: "Panther", cr: 0.25, xp: 50, themes: ["beast", "jungle"] },
+                { name: "Priest Acolyte", cr: 0.25, xp: 50, themes: ["humanoid", "divine", "temple"] },
+                { name: "Pteranodon", cr: 0.25, xp: 50, themes: ["beast", "dinosaur", "sky"] },
+                { name: "Riding Horse", cr: 0.25, xp: 50, themes: ["beast", "grassland"] },
+                { name: "Skeleton", cr: 0.25, xp: 50, themes: ["undead", "dungeon"] },
+                { name: "Violet Fungus", cr: 0.25, xp: 50, themes: ["plant", "cave"] },
+                { name: "Wolf", cr: 0.25, xp: 50, themes: ["beast", "forest", "mountain"] },
+                { name: "Zombie", cr: 0.25, xp: 50, themes: ["undead", "dungeon"] }
+            ],
+            0.5: [
+                { name: "Ape", cr: 0.5, xp: 100, themes: ["beast", "jungle"] },
+                { name: "Black Bear", cr: 0.5, xp: 100, themes: ["beast", "forest"] },
+                { name: "Crocodile", cr: 0.5, xp: 100, themes: ["beast", "swamp", "aquatic"] },
+                { name: "Giant Goat", cr: 0.5, xp: 100, themes: ["beast", "mountain"] },
+                { name: "Giant Sea Horse", cr: 0.5, xp: 100, themes: ["beast", "aquatic"] },
+                { name: "Giant Wasp", cr: 0.5, xp: 100, themes: ["beast", "forest"] },
+                { name: "Gnoll", cr: 0.5, xp: 100, themes: ["humanoid", "gnoll", "desert", "grassland"] },
+                { name: "Hobgoblin", cr: 0.5, xp: 100, themes: ["humanoid", "goblinoid", "military"] },
+                { name: "Lizardfolk", cr: 0.5, xp: 100, themes: ["humanoid", "lizardfolk", "swamp"] },
+                { name: "Orc", cr: 0.5, xp: 100, themes: ["humanoid", "orc", "mountain"] },
+                { name: "Reef Shark", cr: 0.5, xp: 100, themes: ["beast", "aquatic"] },
+                { name: "Rust Monster", cr: 0.5, xp: 100, themes: ["monstrosity", "underdark"] },
+                { name: "Scout", cr: 0.5, xp: 100, themes: ["humanoid", "wilderness"] },
+                { name: "Shadow", cr: 0.5, xp: 100, themes: ["undead", "dungeon", "shadow"] },
+                { name: "Swarm of Insects", cr: 0.5, xp: 100, themes: ["beast", "swarm"] },
+                { name: "Tough", cr: 0.5, xp: 100, themes: ["humanoid", "urban", "criminal"] },
+                { name: "Warhorse", cr: 0.5, xp: 100, themes: ["beast", "military"] },
+                { name: "Warhorse Skeleton", cr: 0.5, xp: 100, themes: ["undead", "military"] }
+            ],
+            1: [
+                { name: "Animated Armor", cr: 1, xp: 200, themes: ["construct", "dungeon"] },
+                { name: "Brown Bear", cr: 1, xp: 200, themes: ["beast", "forest"] },
+                { name: "Bugbear Warrior", cr: 1, xp: 200, themes: ["humanoid", "goblinoid"] },
+                { name: "Death Dog", cr: 1, xp: 200, themes: ["monstrosity", "underdark"] },
+                { name: "Dire Wolf", cr: 1, xp: 200, themes: ["beast", "forest", "mountain"] },
+                { name: "Ghoul", cr: 1, xp: 200, themes: ["undead", "dungeon"] },
+                { name: "Giant Eagle", cr: 1, xp: 200, themes: ["beast", "mountain", "sky"] },
+                { name: "Giant Hyena", cr: 1, xp: 200, themes: ["beast", "desert"] },
+                { name: "Giant Octopus", cr: 1, xp: 200, themes: ["beast", "aquatic"] },
+                { name: "Giant Spider", cr: 1, xp: 200, themes: ["beast", "cave", "forest"] },
+                { name: "Giant Toad", cr: 1, xp: 200, themes: ["beast", "swamp"] },
+                { name: "Giant Vulture", cr: 1, xp: 200, themes: ["beast", "desert", "sky"] },
+                { name: "Goblin Boss", cr: 1, xp: 200, themes: ["humanoid", "goblinoid", "leader"] },
+                { name: "Harpy", cr: 1, xp: 200, themes: ["monstrosity", "sky", "coast"] },
+                { name: "Hippogriff", cr: 1, xp: 200, themes: ["monstrosity", "mountain", "sky"] },
+                { name: "Lion", cr: 1, xp: 200, themes: ["beast", "grassland"] },
+                { name: "Pirate", cr: 1, xp: 200, themes: ["humanoid", "aquatic", "urban"] },
+                { name: "Specter", cr: 1, xp: 200, themes: ["undead", "dungeon"] },
+                { name: "Spy", cr: 1, xp: 200, themes: ["humanoid", "urban", "stealth"] },
+                { name: "Tiger", cr: 1, xp: 200, themes: ["beast", "jungle"] }
+            ],
+            2: [
+                { name: "Allosaurus", cr: 2, xp: 450, themes: ["beast", "dinosaur"] },
+                { name: "Ankheg", cr: 2, xp: 450, themes: ["monstrosity", "desert", "forest"] },
+                { name: "Awakened Tree", cr: 2, xp: 450, themes: ["plant", "forest"] },
+                { name: "Bandit Captain", cr: 2, xp: 450, themes: ["humanoid", "urban", "leader"] },
+                { name: "Berserker", cr: 2, xp: 450, themes: ["humanoid", "warrior"] },
+                { name: "Black Dragon Wyrmling", cr: 2, xp: 450, themes: ["dragon", "swamp"] },
+                { name: "Carrion Crawler", cr: 2, xp: 450, themes: ["monstrosity", "underdark"] },
+                { name: "Cultist Fanatic", cr: 2, xp: 450, themes: ["humanoid", "cultist"] },
+                { name: "Druid", cr: 2, xp: 450, themes: ["humanoid", "spellcaster", "forest"] },
+                { name: "Ettercap", cr: 2, xp: 450, themes: ["monstrosity", "forest", "cave"] },
+                { name: "Gargoyle", cr: 2, xp: 450, themes: ["elemental", "dungeon"] },
+                { name: "Gelatinous Cube", cr: 2, xp: 450, themes: ["ooze", "dungeon"] },
+                { name: "Ghast", cr: 2, xp: 450, themes: ["undead", "dungeon"] },
+                { name: "Giant Boar", cr: 2, xp: 450, themes: ["beast", "forest"] },
+                { name: "Giant Constrictor Snake", cr: 2, xp: 450, themes: ["beast", "swamp", "jungle"] },
+                { name: "Giant Elk", cr: 2, xp: 450, themes: ["beast", "forest"] },
+                { name: "Gibbering Mouther", cr: 2, xp: 450, themes: ["aberration", "underdark"] },
+                { name: "Grick", cr: 2, xp: 450, themes: ["monstrosity", "underdark"] },
+                { name: "Griffon", cr: 2, xp: 450, themes: ["monstrosity", "mountain", "sky"] },
+                { name: "Hunter Shark", cr: 2, xp: 450, themes: ["beast", "aquatic"] },
+                { name: "Merrow", cr: 2, xp: 450, themes: ["monstrosity", "aquatic"] },
+                { name: "Mimic", cr: 2, xp: 450, themes: ["monstrosity", "dungeon"] },
+                { name: "Ochre Jelly", cr: 2, xp: 450, themes: ["ooze", "underdark"] },
+                { name: "Ogre", cr: 2, xp: 450, themes: ["giant", "mountain"] },
+                { name: "Ogre Zombie", cr: 2, xp: 450, themes: ["undead", "dungeon"] },
+                { name: "Polar Bear", cr: 2, xp: 450, themes: ["beast", "arctic"] },
+                { name: "Priest", cr: 2, xp: 450, themes: ["humanoid", "divine"] },
+                { name: "Rhinoceros", cr: 2, xp: 450, themes: ["beast", "grassland"] },
+                { name: "Saber-Toothed Tiger", cr: 2, xp: 450, themes: ["beast", "arctic"] },
+                { name: "Sea Hag", cr: 2, xp: 450, themes: ["fey", "aquatic", "coast"] },
+                { name: "Swarm of Venomous Snakes", cr: 2, xp: 450, themes: ["beast", "swarm"] },
+                { name: "Wererat", cr: 2, xp: 450, themes: ["humanoid", "shapechanger", "urban"] },
+                { name: "Will-o'-Wisp", cr: 2, xp: 450, themes: ["undead", "swamp"] }
+            ],
+            3: [
+                { name: "Basilisk", cr: 3, xp: 700, themes: ["monstrosity", "cave"] },
+                { name: "Bearded Devil", cr: 3, xp: 700, themes: ["fiend", "devil", "infernal"] },
+                { name: "Blue Dragon Wyrmling", cr: 3, xp: 700, themes: ["dragon", "desert"] },
+                { name: "Bugbear Stalker", cr: 3, xp: 700, themes: ["humanoid", "goblinoid", "stealth"] },
+                { name: "Displacer Beast", cr: 3, xp: 700, themes: ["monstrosity", "forest"] },
+                { name: "Doppelganger", cr: 3, xp: 700, themes: ["monstrosity", "shapechanger", "urban"] },
+                { name: "Giant Scorpion", cr: 3, xp: 700, themes: ["beast", "desert"] },
+                { name: "Green Hag", cr: 3, xp: 700, themes: ["fey", "swamp", "forest"] },
+                { name: "Hell Hound", cr: 3, xp: 700, themes: ["fiend", "infernal"] },
+                { name: "Hobgoblin Captain", cr: 3, xp: 700, themes: ["humanoid", "goblinoid", "military", "leader"] },
+                { name: "Knight", cr: 3, xp: 700, themes: ["humanoid", "warrior", "military"] },
+                { name: "Manticore", cr: 3, xp: 700, themes: ["monstrosity", "mountain"] },
+                { name: "Minotaur of Baphomet", cr: 3, xp: 700, themes: ["monstrosity", "labyrinth"] },
+                { name: "Mummy", cr: 3, xp: 700, themes: ["undead", "desert", "tomb"] },
+                { name: "Nightmare", cr: 3, xp: 700, themes: ["fiend", "infernal"] },
+                { name: "Owlbear", cr: 3, xp: 700, themes: ["monstrosity", "forest", "cave"] },
+                { name: "Phase Spider", cr: 3, xp: 700, themes: ["monstrosity", "ethereal"] },
+                { name: "Scout Captain", cr: 3, xp: 700, themes: ["humanoid", "wilderness", "leader"] },
+                { name: "Warrior Veteran", cr: 3, xp: 700, themes: ["humanoid", "warrior", "military"] },
+                { name: "Werewolf", cr: 3, xp: 700, themes: ["humanoid", "shapechanger", "forest"] },
+                { name: "Wight", cr: 3, xp: 700, themes: ["undead", "dungeon"] },
+                { name: "Winter Wolf", cr: 3, xp: 700, themes: ["monstrosity", "arctic"] }
+            ],
+            4: [
+                { name: "Banshee", cr: 4, xp: 1100, themes: ["undead", "dungeon"] },
+                { name: "Black Pudding", cr: 4, xp: 1100, themes: ["ooze", "underdark", "dungeon"] },
+                { name: "Chuul", cr: 4, xp: 1100, themes: ["aberration", "aquatic", "underdark"] },
+                { name: "Couatl", cr: 4, xp: 1100, themes: ["celestial", "jungle"] },
+                { name: "Elephant", cr: 4, xp: 1100, themes: ["beast", "grassland"] },
+                { name: "Ettin", cr: 4, xp: 1100, themes: ["giant", "mountain"] },
+                { name: "Ghost", cr: 4, xp: 1100, themes: ["undead", "dungeon"] },
+                { name: "Guard Captain", cr: 4, xp: 1100, themes: ["humanoid", "urban", "military", "leader"] },
+                { name: "Helmed Horror", cr: 4, xp: 1100, themes: ["construct", "dungeon"] },
+                { name: "Incubus", cr: 4, xp: 1100, themes: ["fiend", "demon"] },
+                { name: "Lamia", cr: 4, xp: 1100, themes: ["monstrosity", "desert"] },
+                { name: "Red Dragon Wyrmling", cr: 4, xp: 1100, themes: ["dragon", "mountain"] },
+                { name: "Succubus", cr: 4, xp: 1100, themes: ["fiend", "demon"] },
+                { name: "Tough Boss", cr: 4, xp: 1100, themes: ["humanoid", "urban", "criminal", "leader"] },
+                { name: "Wereboar", cr: 4, xp: 1100, themes: ["humanoid", "shapechanger", "forest"] },
+                { name: "Weretiger", cr: 4, xp: 1100, themes: ["humanoid", "shapechanger", "jungle"] }
+            ],
+            5: [
+                { name: "Air Elemental", cr: 5, xp: 1800, themes: ["elemental", "air"] },
+                { name: "Beholder Zombie", cr: 5, xp: 1800, themes: ["undead", "underdark"] },
+                { name: "Bulette", cr: 5, xp: 1800, themes: ["monstrosity", "grassland"] },
+                { name: "Earth Elemental", cr: 5, xp: 1800, themes: ["elemental", "earth"] },
+                { name: "Fire Elemental", cr: 5, xp: 1800, themes: ["elemental", "fire"] },
+                { name: "Flesh Golem", cr: 5, xp: 1800, themes: ["construct", "dungeon"] },
+                { name: "Giant Crocodile", cr: 5, xp: 1800, themes: ["beast", "swamp", "aquatic"] },
+                { name: "Giant Shark", cr: 5, xp: 1800, themes: ["beast", "aquatic"] },
+                { name: "Gladiator", cr: 5, xp: 1800, themes: ["humanoid", "warrior", "arena"] },
+                { name: "Gorgon", cr: 5, xp: 1800, themes: ["monstrosity", "grassland"] },
+                { name: "Hill Giant", cr: 5, xp: 1800, themes: ["giant", "mountain"] },
+                { name: "Night Hag", cr: 5, xp: 1800, themes: ["fiend", "nightmare"] },
+                { name: "Otyugh", cr: 5, xp: 1800, themes: ["aberration", "underdark", "sewer"] },
+                { name: "Roper", cr: 5, xp: 1800, themes: ["monstrosity", "underdark", "cave"] },
+                { name: "Salamander", cr: 5, xp: 1800, themes: ["elemental", "fire"] },
+                { name: "Shambling Mound", cr: 5, xp: 1800, themes: ["plant", "swamp"] },
+                { name: "Triceratops", cr: 5, xp: 1800, themes: ["beast", "dinosaur"] },
+                { name: "Troll", cr: 5, xp: 1800, themes: ["giant", "swamp", "mountain"] },
+                { name: "Umber Hulk", cr: 5, xp: 1800, themes: ["monstrosity", "underdark"] },
+                { name: "Vampire Spawn", cr: 5, xp: 1800, themes: ["undead", "vampire"] },
+                { name: "Water Elemental", cr: 5, xp: 1800, themes: ["elemental", "water", "aquatic"] },
+                { name: "Wraith", cr: 5, xp: 1800, themes: ["undead", "dungeon"] },
+                { name: "Xorn", cr: 5, xp: 1800, themes: ["elemental", "earth", "underdark"] }
+            ],
+            6: [
+                { name: "Chimera", cr: 6, xp: 2300, themes: ["monstrosity", "mountain"] },
+                { name: "Cyclops Sentry", cr: 6, xp: 2300, themes: ["giant", "coast", "mountain"] },
+                { name: "Drider", cr: 6, xp: 2300, themes: ["monstrosity", "underdark"] },
+                { name: "Hobgoblin Warlord", cr: 6, xp: 2300, themes: ["humanoid", "goblinoid", "military", "leader"] },
+                { name: "Invisible Stalker", cr: 6, xp: 2300, themes: ["elemental", "air"] },
+                { name: "Mage", cr: 6, xp: 2300, themes: ["humanoid", "spellcaster"] },
+                { name: "Mammoth", cr: 6, xp: 2300, themes: ["beast", "arctic"] },
+                { name: "Medusa", cr: 6, xp: 2300, themes: ["monstrosity", "ruins"] },
+                { name: "Pirate Captain", cr: 6, xp: 2300, themes: ["humanoid", "aquatic", "leader"] },
+                { name: "Wyvern", cr: 6, xp: 2300, themes: ["dragon", "mountain", "sky"] },
+                { name: "Young Brass Dragon", cr: 6, xp: 2300, themes: ["dragon", "desert"] },
+                { name: "Young White Dragon", cr: 6, xp: 2300, themes: ["dragon", "arctic"] }
+            ],
+            7: [
+                { name: "Blue Slaad", cr: 7, xp: 2900, themes: ["aberration", "chaos"] },
+                { name: "Giant Ape", cr: 7, xp: 2900, themes: ["beast", "jungle"] },
+                { name: "Mind Flayer", cr: 7, xp: 2900, themes: ["aberration", "underdark"] },
+                { name: "Oni", cr: 7, xp: 2900, themes: ["giant", "shapechanger"] },
+                { name: "Shield Guardian", cr: 7, xp: 2900, themes: ["construct", "dungeon"] },
+                { name: "Stone Giant", cr: 7, xp: 2900, themes: ["giant", "mountain"] },
+                { name: "Young Black Dragon", cr: 7, xp: 2900, themes: ["dragon", "swamp"] },
+                { name: "Young Copper Dragon", cr: 7, xp: 2900, themes: ["dragon", "mountain"] },
+                { name: "Yuan-ti Abomination", cr: 7, xp: 2900, themes: ["monstrosity", "jungle"] }
+            ],
+            8: [
+                { name: "Assassin", cr: 8, xp: 3900, themes: ["humanoid", "stealth", "urban"] },
+                { name: "Chain Devil", cr: 8, xp: 3900, themes: ["fiend", "devil", "infernal"] },
+                { name: "Cloaker", cr: 8, xp: 3900, themes: ["aberration", "underdark"] },
+                { name: "Fomorian", cr: 8, xp: 3900, themes: ["giant", "underdark"] },
+                { name: "Frost Giant", cr: 8, xp: 3900, themes: ["giant", "arctic"] },
+                { name: "Green Slaad", cr: 8, xp: 3900, themes: ["aberration", "chaos"] },
+                { name: "Hezrou", cr: 8, xp: 3900, themes: ["fiend", "demon"] },
+                { name: "Hydra", cr: 8, xp: 3900, themes: ["monstrosity", "swamp"] },
+                { name: "Spirit Naga", cr: 8, xp: 3900, themes: ["monstrosity", "ruins"] },
+                { name: "Tyrannosaurus Rex", cr: 8, xp: 3900, themes: ["beast", "dinosaur"] },
+                { name: "Young Bronze Dragon", cr: 8, xp: 3900, themes: ["dragon", "coast"] },
+                { name: "Young Green Dragon", cr: 8, xp: 3900, themes: ["dragon", "forest"] }
+            ],
+            9: [
+                { name: "Abominable Yeti", cr: 9, xp: 5000, themes: ["monstrosity", "arctic"] },
+                { name: "Bone Devil", cr: 9, xp: 5000, themes: ["fiend", "devil", "infernal"] },
+                { name: "Clay Golem", cr: 9, xp: 5000, themes: ["construct", "dungeon"] },
+                { name: "Cloud Giant", cr: 9, xp: 5000, themes: ["giant", "mountain", "sky"] },
+                { name: "Fire Giant", cr: 9, xp: 5000, themes: ["giant", "mountain", "volcanic"] },
+                { name: "Glabrezu", cr: 9, xp: 5000, themes: ["fiend", "demon"] },
+                { name: "Gray Slaad", cr: 9, xp: 5000, themes: ["aberration", "chaos"] },
+                { name: "Treant", cr: 9, xp: 5000, themes: ["plant", "forest"] },
+                { name: "Young Blue Dragon", cr: 9, xp: 5000, themes: ["dragon", "desert"] },
+                { name: "Young Silver Dragon", cr: 9, xp: 5000, themes: ["dragon", "mountain"] }
+            ],
+            10: [
+                { name: "Aboleth", cr: 10, xp: 5900, themes: ["aberration", "aquatic", "underdark"] },
+                { name: "Death Slaad", cr: 10, xp: 5900, themes: ["aberration", "chaos"] },
+                { name: "Deva", cr: 10, xp: 5900, themes: ["celestial", "divine"] },
+                { name: "Guardian Naga", cr: 10, xp: 5900, themes: ["monstrosity", "temple"] },
+                { name: "Stone Golem", cr: 10, xp: 5900, themes: ["construct", "dungeon"] },
+                { name: "Young Gold Dragon", cr: 10, xp: 5900, themes: ["dragon", "mountain"] },
+                { name: "Young Red Dragon", cr: 10, xp: 5900, themes: ["dragon", "mountain"] }
+            ],
+            11: [
+                { name: "Behir", cr: 11, xp: 7200, themes: ["monstrosity", "mountain", "cave"] },
+                { name: "Dao", cr: 11, xp: 7200, themes: ["elemental", "earth"] },
+                { name: "Djinni", cr: 11, xp: 7200, themes: ["elemental", "air"] },
+                { name: "Efreeti", cr: 11, xp: 7200, themes: ["elemental", "fire"] },
+                { name: "Horned Devil", cr: 11, xp: 7200, themes: ["fiend", "devil", "infernal"] },
+                { name: "Marid", cr: 11, xp: 7200, themes: ["elemental", "water"] },
+                { name: "Remorhaz", cr: 11, xp: 7200, themes: ["monstrosity", "arctic"] },
+                { name: "Roc", cr: 11, xp: 7200, themes: ["monstrosity", "mountain", "sky"] }
+            ],
+            12: [
+                { name: "Archmage", cr: 12, xp: 8400, themes: ["humanoid", "spellcaster"] },
+                { name: "Archpriest", cr: 12, xp: 8400, themes: ["humanoid", "divine", "spellcaster"] },
+                { name: "Erinyes", cr: 12, xp: 8400, themes: ["fiend", "devil", "infernal"] },
+                { name: "Pirate Admiral", cr: 12, xp: 8400, themes: ["humanoid", "aquatic", "leader"] },
+                { name: "Questing Knight", cr: 12, xp: 8400, themes: ["humanoid", "warrior"] }
+            ],
+            13: [
+                { name: "Adult Brass Dragon", cr: 13, xp: 10000, themes: ["dragon", "desert"] },
+                { name: "Adult White Dragon", cr: 13, xp: 10000, themes: ["dragon", "arctic"] },
+                { name: "Beholder", cr: 13, xp: 10000, themes: ["aberration", "underdark"] },
+                { name: "Nalfeshnee", cr: 13, xp: 10000, themes: ["fiend", "demon"] },
+                { name: "Rakshasa", cr: 13, xp: 10000, themes: ["fiend", "urban"] },
+                { name: "Storm Giant", cr: 13, xp: 10000, themes: ["giant", "coast", "mountain"] },
+                { name: "Vampire", cr: 13, xp: 10000, themes: ["undead", "vampire", "urban"] }
+            ],
+            14: [
+                { name: "Adult Black Dragon", cr: 14, xp: 11500, themes: ["dragon", "swamp"] },
+                { name: "Adult Copper Dragon", cr: 14, xp: 11500, themes: ["dragon", "mountain"] },
+                { name: "Death Tyrant", cr: 14, xp: 11500, themes: ["undead", "beholder"] },
+                { name: "Ice Devil", cr: 14, xp: 11500, themes: ["fiend", "devil", "infernal"] }
+            ],
+            15: [
+                { name: "Adult Bronze Dragon", cr: 15, xp: 13000, themes: ["dragon", "coast"] },
+                { name: "Adult Green Dragon", cr: 15, xp: 13000, themes: ["dragon", "forest"] },
+                { name: "Mummy Lord", cr: 15, xp: 13000, themes: ["undead", "desert", "tomb"] },
+                { name: "Purple Worm", cr: 15, xp: 13000, themes: ["monstrosity", "underdark"] }
+            ],
+            16: [
+                { name: "Adult Blue Dragon", cr: 16, xp: 15000, themes: ["dragon", "desert"] },
+                { name: "Adult Silver Dragon", cr: 16, xp: 15000, themes: ["dragon", "mountain"] },
+                { name: "Iron Golem", cr: 16, xp: 15000, themes: ["construct", "dungeon"] },
+                { name: "Marilith", cr: 16, xp: 15000, themes: ["fiend", "demon"] },
+                { name: "Planetar", cr: 16, xp: 15000, themes: ["celestial", "divine"] }
+            ],
+            17: [
+                { name: "Adult Gold Dragon", cr: 17, xp: 18000, themes: ["dragon", "mountain"] },
+                { name: "Adult Red Dragon", cr: 17, xp: 18000, themes: ["dragon", "mountain"] },
+                { name: "Death Knight", cr: 17, xp: 18000, themes: ["undead", "warrior"] },
+                { name: "Dracolich", cr: 17, xp: 18000, themes: ["undead", "dragon"] },
+                { name: "Dragon Turtle", cr: 17, xp: 18000, themes: ["dragon", "aquatic"] },
+                { name: "Goristro", cr: 17, xp: 18000, themes: ["fiend", "demon"] }
+            ],
+            18: [
+                { name: "Demilich", cr: 18, xp: 20000, themes: ["undead", "lich", "tomb"] }
+            ],
+            19: [
+                { name: "Balor", cr: 19, xp: 22000, themes: ["fiend", "demon"] }
+            ],
+            20: [
+                { name: "Ancient Brass Dragon", cr: 20, xp: 25000, themes: ["dragon", "desert"] },
+                { name: "Ancient White Dragon", cr: 20, xp: 25000, themes: ["dragon", "arctic"] },
+                { name: "Pit Fiend", cr: 20, xp: 25000, themes: ["fiend", "devil", "infernal"] }
+            ],
+            21: [
+                { name: "Ancient Black Dragon", cr: 21, xp: 33000, themes: ["dragon", "swamp"] },
+                { name: "Ancient Copper Dragon", cr: 21, xp: 33000, themes: ["dragon", "mountain"] },
+                { name: "Lich", cr: 21, xp: 33000, themes: ["undead", "lich", "dungeon"] },
+                { name: "Solar", cr: 21, xp: 33000, themes: ["celestial", "divine"] }
+            ],
+            22: [
+                { name: "Ancient Bronze Dragon", cr: 22, xp: 41000, themes: ["dragon", "coast"] },
+                { name: "Ancient Green Dragon", cr: 22, xp: 41000, themes: ["dragon", "forest"] }
+            ],
+            23: [
+                { name: "Ancient Blue Dragon", cr: 23, xp: 50000, themes: ["dragon", "desert"] },
+                { name: "Ancient Silver Dragon", cr: 23, xp: 50000, themes: ["dragon", "mountain"] },
+                { name: "Empyrean", cr: 23, xp: 50000, themes: ["celestial", "giant"] },
+                { name: "Kraken", cr: 23, xp: 50000, themes: ["monstrosity", "aquatic"] }
+            ],
+            24: [
+                { name: "Ancient Gold Dragon", cr: 24, xp: 62000, themes: ["dragon", "mountain"] },
+                { name: "Ancient Red Dragon", cr: 24, xp: 62000, themes: ["dragon", "mountain"] }
+            ],
+            30: [
+                { name: "Tarrasque", cr: 30, xp: 155000, themes: ["monstrosity", "legendary"] }
+            ]
+        };
+
+        let monsterCount = 0;
+
+        function addMonster() {
+            monsterCount++;
+            const monsterList = document.getElementById('monsterList');
+            const entry = document.createElement('div');
+            entry.className = 'monster-entry';
+            entry.id = `monster-${monsterCount}`;
+            entry.innerHTML = `
+                <div class="form-group">
+                    <label>Monster Name:</label>
+                    <div class="monster-name-wrapper">
+                        <input type="text" id="name-${monsterCount}" placeholder="e.g., Giant Wolf Spider" 
+                               autocomplete="off" oninput="showAutocomplete(${monsterCount}, this.value)"
+                               onblur="setTimeout(() => hideAutocomplete(${monsterCount}), 200)">
+                        <div id="autocomplete-${monsterCount}" class="autocomplete-list" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Count:</label>
+                    <input type="number" id="count-${monsterCount}" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>XP Each (optional):</label>
+                    <input type="number" id="xp-${monsterCount}" min="0" placeholder="Auto if in database">
+                </div>
+                <button class="btn btn-remove" onclick="removeMonster(${monsterCount})">Remove</button>
+            `;
+            monsterList.appendChild(entry);
+        }
+
+        function removeMonster(id) {
+            const element = document.getElementById(`monster-${id}`);
+            element.remove();
+        }
+
+        function getAllMonsters() {
+            const allMonsters = [];
+            for (const [cr, monsters] of Object.entries(monsterDatabase)) {
+                allMonsters.push(...monsters);
+            }
+            return allMonsters;
+        }
+
+        function showAutocomplete(id, value) {
+            const autocompleteDiv = document.getElementById(`autocomplete-${id}`);
+            
+            if (value.length < 2) {
+                autocompleteDiv.style.display = 'none';
+                return;
+            }
+            
+            const allMonsters = getAllMonsters();
+            const matches = allMonsters.filter(m => 
+                m.name.toLowerCase().includes(value.toLowerCase())
+            ).slice(0, 10);
+            
+            if (matches.length === 0) {
+                autocompleteDiv.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            matches.forEach(monster => {
+                html += `
+                    <div class="autocomplete-item" onclick="selectMonster(${id}, '${monster.name.replace(/'/g, "\\'")}', ${monster.xp})">
+                        <strong>${monster.name}</strong> (CR ${monster.cr}, ${monster.xp} XP)
+                    </div>
+                `;
+            });
+            
+            autocompleteDiv.innerHTML = html;
+            autocompleteDiv.style.display = 'block';
+        }
+
+        function hideAutocomplete(id) {
+            const autocompleteDiv = document.getElementById(`autocomplete-${id}`);
+            autocompleteDiv.style.display = 'none';
+        }
+
+        function selectMonster(id, name, xp) {
+            document.getElementById(`name-${id}`).value = name;
+            document.getElementById(`xp-${id}`).value = xp;
+            hideAutocomplete(id);
+        }
+
+        function extractThemes(monsterName) {
+            const name = monsterName.toLowerCase();
+            const themes = [];
+            
+            // Creature type themes (most important)
+            if (name.includes('wolf') || name.includes('spider') || name.includes('bear') || 
+                name.includes('bat') || name.includes('snake') || name.includes('boar') ||
+                name.includes('crocodile') || name.includes('shark') || name.includes('eagle') ||
+                name.includes('hawk') || name.includes('owl') || name.includes('ape') ||
+                name.includes('lion') || name.includes('tiger') || name.includes('panther')) {
+                themes.push('beast');
+            }
+            if (name.includes('guard') || name.includes('bandit') || name.includes('tough') ||
+                name.includes('priest') || name.includes('cultist') || name.includes('noble') ||
+                name.includes('veteran') || name.includes('knight') || name.includes('gladiator') ||
+                name.includes('assassin') || name.includes('spy') || name.includes('tribal') ||
+                name.includes('berserker') || name.includes('scout')) {
+                themes.push('humanoid');
+            }
+            if (name.includes('goblin') || name.includes('hobgoblin') || name.includes('bugbear')) {
+                themes.push('humanoid', 'goblinoid');
+            }
+            if (name.includes('orc')) themes.push('humanoid', 'orc');
+            if (name.includes('gnoll')) themes.push('humanoid', 'gnoll');
+            if (name.includes('kobold')) themes.push('humanoid', 'kobold');
+            if (name.includes('dragon')) themes.push('dragon');
+            if (name.includes('devil') || name.includes('demon')) themes.push('fiend');
+            if (name.includes('zombie') || name.includes('skeleton') || name.includes('vampire') || 
+                name.includes('ghost') || name.includes('wight') || name.includes('wraith') ||
+                name.includes('mummy') || name.includes('lich') || name.includes('specter')) {
+                themes.push('undead');
+            }
+            if (name.includes('elemental') || name.includes('salamander')) themes.push('elemental');
+            if (name.includes('giant') && !name.includes('spider') && !name.includes('wolf')) themes.push('giant');
+            if (name.includes('golem') || name.includes('animated')) themes.push('construct');
+            if (name.includes('ooze') || name.includes('pudding') || name.includes('cube')) themes.push('ooze');
+            if (name.includes('aberration') || name.includes('beholder') || name.includes('mind flayer')) themes.push('aberration');
+            
+            // Environment themes (less important)
+            if (name.includes('cave') || name.includes('spider')) themes.push('cave');
+            if (name.includes('swamp') || name.includes('crocodile') || name.includes('troll')) themes.push('swamp');
+            if (name.includes('desert') || name.includes('scorpion') || name.includes('mummy')) themes.push('desert');
+            if (name.includes('forest') || name.includes('bear') || name.includes('owlbear')) themes.push('forest');
+            if (name.includes('mountain')) themes.push('mountain');
+            if (name.includes('aquatic') || name.includes('shark') || name.includes('octopus')) themes.push('aquatic');
+            if (name.includes('underdark')) themes.push('underdark');
+            if (name.includes('urban') || name.includes('city')) themes.push('urban');
+            
+            return themes.length > 0 ? themes : ['generic'];
+        }
+
+        function calculateThemeSimilarity(themes1, themes2) {
+            // Define creature type categories
+            const creatureTypes = ['humanoid', 'beast', 'dragon', 'fiend', 'undead', 'elemental', 
+                                  'giant', 'construct', 'ooze', 'aberration', 'monstrosity', 'plant', 'fey'];
+            
+            const set1 = new Set(themes1);
+            const set2 = new Set(themes2);
+            
+            // Extract creature types from each set
+            const types1 = [...set1].filter(t => creatureTypes.includes(t));
+            const types2 = [...set2].filter(t => creatureTypes.includes(t));
+            
+            // If creature types don't match at all, heavily penalize
+            const typeMatch = types1.some(t => types2.includes(t));
+            if (!typeMatch && types1.length > 0 && types2.length > 0) {
+                return 0.1; // Very low similarity for different creature types
+            }
+            
+            // Calculate normal similarity
+            const intersection = new Set([...set1].filter(x => set2.has(x)));
+            const union = new Set([...set1, ...set2]);
+            const baseSimilarity = intersection.size / union.size;
+            
+            // Bonus for matching creature types
+            const typeIntersection = types1.filter(t => types2.includes(t));
+            const typeBonus = typeIntersection.length > 0 ? 0.5 : 0;
+            
+            return Math.min(1.0, baseSimilarity + typeBonus);
+        }
+
+        function findSimilarMonsters(originalThemes, targetXP, tolerance = 0.3) {
+            const results = [];
+            
+            // Find monsters within XP range
+            for (const [cr, monsters] of Object.entries(monsterDatabase)) {
+                for (const monster of monsters) {
+                    const xpDiff = Math.abs(monster.xp - targetXP) / targetXP;
+                    if (xpDiff <= tolerance) {
+                        const similarity = calculateThemeSimilarity(originalThemes, monster.themes);
+                        results.push({
+                            ...monster,
+                            similarity,
+                            xpDiff
+                        });
+                    }
+                }
+            }
+            
+            // Sort by similarity first, then by XP difference
+            results.sort((a, b) => {
+                if (Math.abs(a.similarity - b.similarity) > 0.1) {
+                    return b.similarity - a.similarity;
+                }
+                return a.xpDiff - b.xpDiff;
+            });
+            
+            return results;
+        }
+
+        function generateEncounterOptions(targetXPBudget, originalMonsters) {
+            const options = [];
+            
+            // Calculate total XP and average XP per monster in original
+            const totalOriginalXP = originalMonsters.reduce((sum, m) => sum + (m.xp * m.count), 0);
+            const avgXPPerMonster = totalOriginalXP / originalMonsters.reduce((sum, m) => sum + m.count, 0);
+            
+            // Extract themes from original monsters
+            const allThemes = originalMonsters.flatMap(m => m.themes);
+            const uniqueThemes = [...new Set(allThemes)];
+            
+            // Generate different composition options
+            const compositions = [
+                { count: 1, description: "Single powerful creature" },
+                { count: 2, description: "Pair of strong creatures" },
+                { count: 3, description: "Trio of creatures" },
+                { count: Math.max(2, Math.floor(originalMonsters.reduce((sum, m) => sum + m.count, 0) * 0.8)), 
+                  description: "Similar group size" },
+                { count: originalMonsters.reduce((sum, m) => sum + m.count, 0), 
+                  description: "Same number as original" }
+            ];
+            
+            // Remove duplicates
+            const uniqueCompositions = compositions.filter((comp, index, self) =>
+                index === self.findIndex(c => c.count === comp.count)
+            );
+            
+            for (const comp of uniqueCompositions) {
+                const targetXPPerMonster = targetXPBudget / comp.count;
+                const similarMonsters = findSimilarMonsters(uniqueThemes, targetXPPerMonster);
+                
+                if (similarMonsters.length > 0) {
+                    // Take top 3 most similar
+                    const topMonsters = similarMonsters.slice(0, 3);
+                    
+                    for (const monster of topMonsters) {
+                        const actualTotal = monster.xp * comp.count;
+                        const diff = ((actualTotal - targetXPBudget) / targetXPBudget * 100).toFixed(1);
+                        
+                        options.push({
+                            monsters: [{ ...monster, count: comp.count }],
+                            totalXP: actualTotal,
+                            description: comp.description,
+                            xpDiff: Math.abs(parseFloat(diff)),
+                            diffPercent: diff
+                        });
+                    }
+                }
+            }
+            
+            // Sort by XP difference
+            options.sort((a, b) => a.xpDiff - b.xpDiff);
+            
+            return options.slice(0, 5); // Return top 5 options
+        }
+
+        function scaleEncounter() {
+            // Get original encounter data
+            const origLevel = parseInt(document.getElementById('origLevel').value);
+            const origPartySize = parseInt(document.getElementById('origPartySize').value);
+            
+            // Get all monsters
+            const monsters = [];
+            const monsterEntries = document.querySelectorAll('.monster-entry');
+            
+            for (const entry of monsterEntries) {
+                const id = entry.id.split('-')[1];
+                const name = document.getElementById(`name-${id}`).value;
+                const count = parseInt(document.getElementById(`count-${id}`).value);
+                const manualXP = document.getElementById(`xp-${id}`).value;
+                
+                if (name && count > 0) {
+                    // Check if manual XP was provided
+                    if (manualXP && parseInt(manualXP) > 0) {
+                        const themes = extractThemes(name);
+                        monsters.push({
+                            name,
+                            count,
+                            xp: parseInt(manualXP),
+                            themes,
+                            cr: 'Custom'
+                        });
+                    } else {
+                        // Try to find monster in database
+                        let foundMonster = null;
+                        for (const [cr, monsterList] of Object.entries(monsterDatabase)) {
+                            foundMonster = monsterList.find(m => 
+                                m.name.toLowerCase() === name.toLowerCase()
+                            );
+                            if (foundMonster) break;
+                        }
+                        
+                        if (foundMonster) {
+                            monsters.push({ ...foundMonster, count });
+                        } else {
+                            // If not in database and no manual XP, show error
+                            alert(`Monster "${name}" not found in database. Please enter XP value manually.`);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            if (monsters.length === 0) {
+                alert('Please add at least one monster to the original encounter.');
+                return;
+            }
+            
+            // Calculate original encounter XP
+            const originalTotalXP = monsters.reduce((sum, m) => sum + (m.xp * m.count), 0);
+            
+            // Get original difficulty selection
+            const origDifficulty = document.getElementById('origDifficulty').value;
+            
+            // Get target encounter data
+            const targetLevel = parseInt(document.getElementById('targetLevel').value);
+            const targetPartySize = parseInt(document.getElementById('targetPartySize').value);
+            const targetDifficulty = document.getElementById('targetDifficulty').value;
+            
+            // Calculate original difficulty budget based on selected difficulty
+            const origXPPerChar = xpBudgets[origLevel];
+            const originalDifficultyBudget = origXPPerChar[origDifficulty] * origPartySize;
+            const originalDifficultyName = origDifficulty.charAt(0).toUpperCase() + origDifficulty.slice(1);
+            
+            // Calculate the ratio of actual XP to budget
+            const difficultyRatio = originalTotalXP / originalDifficultyBudget;
+            
+            // Calculate target budget and apply the same ratio
+            const xpPerCharacter = xpBudgets[targetLevel][targetDifficulty];
+            const targetFullBudget = xpPerCharacter * targetPartySize;
+            const targetXPBudget = targetFullBudget * difficultyRatio;
+            
+            // Generate options
+            const options = generateEncounterOptions(targetXPBudget, monsters);
+            
+            // Display results
+            displayResults(monsters, options, targetLevel, targetPartySize, targetDifficulty, 
+                          targetXPBudget, originalTotalXP, originalDifficultyName, 
+                          originalDifficultyBudget, difficultyRatio, targetFullBudget,
+                          origLevel, origPartySize, origDifficulty);
+        }
+
+        function displayResults(originalMonsters, options, targetLevel, targetPartySize, targetDifficulty, 
+                               targetXPBudget, originalTotalXP, originalDifficultyName, 
+                               originalDifficultyBudget, difficultyRatio, targetFullBudget, 
+                               originalLevel, originalPartySize, originalDifficulty) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            resultsSection.style.display = 'block';
+            
+            const ratioPercent = (difficultyRatio * 100).toFixed(1);
+            
+            const origXPPerChar = xpBudgets[originalLevel];
+            const origBudgetPerChar = origXPPerChar[originalDifficulty];
+            const targetXPPerChar = xpBudgets[targetLevel][targetDifficulty];
+            
+            let html = `
+                <div class="info-box">
+                    <strong>Original Encounter:</strong><br>
+                    Level ${originalLevel} party of ${originalPartySize} characters<br>
+                    Difficulty: ${originalDifficultyName}<br>
+                    XP Budget: ${origBudgetPerChar.toLocaleString()} per character × ${originalPartySize} = ${originalDifficultyBudget.toLocaleString()} XP<br>
+                    Total XP: ${originalTotalXP.toLocaleString()} XP<br>
+                    <strong>Using ${ratioPercent}% of ${originalDifficultyName} difficulty budget</strong>
+                </div>
+                
+                <div class="info-box">
+                    <strong>Target Parameters:</strong><br>
+                    Level ${targetLevel} party of ${targetPartySize} characters<br>
+                    Difficulty: ${targetDifficulty.charAt(0).toUpperCase() + targetDifficulty.slice(1)}<br>
+                    XP Budget: ${targetXPPerChar.toLocaleString()} per character × ${targetPartySize} = ${targetFullBudget.toLocaleString()} XP<br>
+                    <strong>Scaled to ${ratioPercent}% = ${Math.round(targetXPBudget).toLocaleString()} XP target</strong>
+                </div>
+            `;
+            
+            if (options.length === 0) {
+                html += '<p>No suitable encounters found. Try adjusting the target parameters.</p>';
+            } else {
+                options.forEach((option, index) => {
+                    const diffClass = 
+                        Math.abs(parseFloat(option.diffPercent)) < 10 ? 'difficulty-low' :
+                        Math.abs(parseFloat(option.diffPercent)) < 25 ? 'difficulty-medium' :
+                        'difficulty-high';
+                    
+                    const diffLabel = option.diffPercent > 0 ? 'Harder' : 'Easier';
+                    
+                    html += `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <h3>Option ${index + 1}: ${option.description}
+                                    <span class="difficulty-badge ${diffClass}">
+                                        ${Math.abs(parseFloat(option.diffPercent))}% ${diffLabel}
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class="xp-info">
+                                <div class="xp-box">
+                                    <div class="label">Total XP</div>
+                                    <div class="value">${option.totalXP.toLocaleString()}</div>
+                                </div>
+                                <div class="xp-box">
+                                    <div class="label">Target XP</div>
+                                    <div class="value">${targetXPBudget.toLocaleString()}</div>
+                                </div>
+                                <div class="xp-box">
+                                    <div class="label">Difference</div>
+                                    <div class="value">${option.diffPercent > 0 ? '+' : ''}${option.diffPercent}%</div>
+                                </div>
+                            </div>
+                            <div class="monster-list">
+                    `;
+                    
+                    option.monsters.forEach(monster => {
+                        html += `
+                            <div class="monster-item">
+                                <strong>${monster.count}x ${monster.name}</strong> 
+                                (CR ${monster.cr}, ${monster.xp} XP each, Total: ${(monster.xp * monster.count).toLocaleString()} XP)
+                                <br>
+                                <span style="color: #666; font-size: 0.9em;">
+                                    Themes: ${monster.themes.join(', ')}
+                                </span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            resultsContainer.innerHTML = html;
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize with one monster entry
+        addMonster();
+    </script>
+</body>
+</html>

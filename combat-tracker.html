@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combat Status Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 15px;
+            touch-action: manipulation;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        /* Encounter Management */
+        .encounter-controls {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .encounter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .encounter-tab {
+            padding: 12px 20px;
+            background: #3a3a3a;
+            border: 2px solid #4a4a4a;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #e0e0e0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .encounter-tab.active {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+        }
+
+        .encounter-tab:hover {
+            border-color: #ff6b6b;
+        }
+
+        .encounter-tab-name {
+            flex: 1;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .encounter-tab input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 150px;
+        }
+
+        .new-encounter-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .new-encounter-form input {
+            flex: 1;
+            padding: 12px;
+            background: #3a3a3a;
+            border: 2px solid #4a4a4a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #3a8eef;
+        }
+
+        button.danger {
+            background: #ff4757;
+        }
+
+        button.danger:hover {
+            background: #ef3747;
+        }
+
+        button.success {
+            background: #26de81;
+        }
+
+        button.success:hover {
+            background: #16ce71;
+        }
+
+        /* Combatant List */
+        .combatants-section {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .add-combatant-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .add-combatant-form input {
+            flex: 1;
+            padding: 12px;
+            background: #3a3a3a;
+            border: 2px solid #4a4a4a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 16px;
+        }
+
+        .combatant-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .combatant {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 6px;
+            border: 2px solid #4a4a4a;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .combatant.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        .combatant.drag-over {
+            border-color: #4a9eff;
+            transform: translateY(-2px);
+        }
+
+        .combatant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .combatant-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff6b6b;
+        }
+
+        .combatant-name.player {
+            color: #26de81;
+        }
+
+        .combatant.player {
+            border-left: 3px solid #26de81;
+        }
+
+        .combatant-divider {
+            height: 2px;
+            background: linear-gradient(to right, transparent, #4a9eff, transparent);
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .combatant-divider::after {
+            content: attr(data-label);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a2a2a;
+            padding: 0 15px;
+            color: #4a9eff;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .combatant-divider[data-label="PLAYERS"]::after {
+            color: #26de81;
+        }
+
+        .combatant-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .combatant-controls button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Effects */
+        .effects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .effect {
+            background: #4a4a4a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .effect.condition {
+            background: #e74c3c;
+        }
+
+        .effect.spell {
+            background: #3498db;
+        }
+
+        .effect.mastery {
+            background: #f39c12;
+        }
+
+        .effect-duration {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .effect-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+            opacity: 0.7;
+            line-height: 1;
+        }
+
+        .effect-remove:hover {
+            opacity: 1;
+        }
+
+        /* Add Effect Form */
+        .add-effect-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #4a4a4a;
+        }
+
+        .add-effect-form {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            background: #4a4a4a;
+            border: 1px solid #5a5a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .add-effect-form button {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Round Controls */
+        .round-controls {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .round-display {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4a9eff;
+            margin-bottom: 12px;
+        }
+
+        .round-controls button {
+            font-size: 20px;
+            padding: 15px 40px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+
+            .encounter-controls,
+            .combatants-section,
+            .round-controls {
+                padding: 15px;
+            }
+
+            .encounter-tab {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .new-encounter-form {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .new-encounter-form input {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .new-encounter-form button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .add-combatant-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .add-combatant-form input {
+                grid-column: 1 / -1;
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .add-combatant-form label {
+                grid-column: 1;
+                justify-content: center;
+                padding: 8px;
+                background: rgba(38, 222, 129, 0.1);
+                border: 1px solid #26de81;
+                border-radius: 6px;
+            }
+
+            .add-combatant-form button {
+                grid-column: 2;
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .add-effect-form {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .add-effect-form .form-group:nth-child(1),
+            .add-effect-form .form-group:nth-child(2) {
+                grid-column: span 1;
+            }
+
+            .add-effect-form .form-group:nth-child(3),
+            .add-effect-form .form-group:nth-child(4) {
+                grid-column: span 1;
+            }
+
+            .round-display {
+                font-size: 28px;
+            }
+
+            .round-controls button {
+                font-size: 18px;
+                padding: 12px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Combat Status Tracker</h1>
+
+        <!-- Encounter Management -->
+        <div class="encounter-controls">
+            <h2 style="margin-bottom: 15px; color: #4a9eff;">Encounters</h2>
+            <div class="encounter-tabs" id="encounterTabs"></div>
+            <div class="new-encounter-form">
+                <input type="text" id="newEncounterName" placeholder="New encounter name...">
+                <button onclick="createEncounter()">+ Add Encounter</button>
+            </div>
+        </div>
+
+        <!-- Combatants Section -->
+        <div class="combatants-section" id="combatantsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="color: #4a9eff;">Combatants</h2>
+                <button class="danger" onclick="clearEncounter()" id="clearBtn" style="display: none;">Clear Encounter</button>
+            </div>
+            
+            <div class="add-combatant-form">
+                <input type="text" id="newCombatantName" placeholder="Combatant name...">
+                <label style="display: flex; align-items: center; gap: 8px; color: #26de81; cursor: pointer; white-space: nowrap;">
+                    <input type="checkbox" id="newCombatantIsPlayer" style="cursor: pointer;">
+                    Player
+                </label>
+                <button onclick="addCombatant()">+ Add</button>
+            </div>
+
+            <div class="add-effect-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #4a4a4a;">
+                <h3 style="color: #4a9eff; margin-bottom: 15px; font-size: 18px;">Add Effect</h3>
+                <div class="add-effect-form" style="margin-bottom: 10px;">
+                    <div class="form-group">
+                        <label>To Combatant</label>
+                        <select id="globalEffectTarget">
+                            <option value="">Select combatant...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="globalEffectType" onchange="updateGlobalEffectNameField()">
+                            <option value="condition">Condition</option>
+                            <option value="spell">Spell</option>
+                            <option value="mastery">Mastery</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="globalEffectNameLabel">Condition</label>
+                        <select id="globalEffectName">
+                            <option value="Blinded">Blinded</option>
+                            <option value="Charmed">Charmed</option>
+                            <option value="Deafened">Deafened</option>
+                            <option value="Exhaustion">Exhaustion</option>
+                            <option value="Frightened">Frightened</option>
+                            <option value="Grappled">Grappled</option>
+                            <option value="Incapacitated">Incapacitated</option>
+                            <option value="Invisible">Invisible</option>
+                            <option value="Paralyzed">Paralyzed</option>
+                            <option value="Petrified">Petrified</option>
+                            <option value="Poisoned">Poisoned</option>
+                            <option value="Prone">Prone</option>
+                            <option value="Restrained">Restrained</option>
+                            <option value="Stunned">Stunned</option>
+                            <option value="Unconscious">Unconscious</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Rounds</label>
+                        <input type="number" id="globalEffectDuration" value="1" min="0" max="99">
+                    </div>
+                </div>
+                <button onclick="addGlobalEffect()" style="width: 100%;">+ Add Effect</button>
+            </div>
+
+            <div class="combatant-list" id="combatantList"></div>
+        </div>
+
+        <!-- Round Controls -->
+        <div class="round-controls">
+            <div class="round-display">Round <span id="roundNumber">1</span></div>
+            <button class="success" onclick="endRound()">End Round</button>
+        </div>
+    </div>
+
+    <!-- Delete Encounter Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h2>Delete Encounter?</h2>
+            <p>Are you sure you want to delete "<span id="deleteEncounterName"></span>"? This cannot be undone.</p>
+            <div class="modal-buttons">
+                <button onclick="closeDeleteModal()">Cancel</button>
+                <button class="danger" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure
+        let encounters = {};
+        let currentEncounter = null;
+        let encounterToDelete = null;
+
+        // Initialize
+        function init() {
+            loadData();
+            if (Object.keys(encounters).length === 0) {
+                createEncounter('Combat 1');
+            }
+            renderEncounters();
+            renderCombatants();
+        }
+
+        // Local Storage
+        function saveData() {
+            localStorage.setItem('combatTrackerData', JSON.stringify({
+                encounters,
+                currentEncounter
+            }));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('combatTrackerData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                encounters = data.encounters || {};
+                currentEncounter = data.currentEncounter;
+            }
+        }
+
+        // Encounter Management
+        function createEncounter(name = null) {
+            const input = document.getElementById('newEncounterName');
+            const encounterName = name || input.value.trim();
+            
+            if (!encounterName) {
+                alert('Please enter an encounter name');
+                return;
+            }
+
+            const id = Date.now().toString();
+            encounters[id] = {
+                id,
+                name: encounterName,
+                combatants: [],
+                round: 1
+            };
+
+            currentEncounter = id;
+            if (!name) input.value = '';
+            
+            saveData();
+            renderEncounters();
+            renderCombatants();
+        }
+
+        function switchEncounter(id) {
+            currentEncounter = id;
+            saveData();
+            renderEncounters();
+            renderCombatants();
+        }
+
+        function deleteEncounter(id) {
+            encounterToDelete = id;
+            document.getElementById('deleteEncounterName').textContent = encounters[id].name;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            if (encounterToDelete) {
+                delete encounters[encounterToDelete];
+                
+                if (currentEncounter === encounterToDelete) {
+                    const keys = Object.keys(encounters);
+                    currentEncounter = keys.length > 0 ? keys[0] : null;
+                }
+
+                encounterToDelete = null;
+                closeDeleteModal();
+                saveData();
+                renderEncounters();
+                renderCombatants();
+            }
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            encounterToDelete = null;
+        }
+
+        function renderEncounters() {
+            const container = document.getElementById('encounterTabs');
+            container.innerHTML = '';
+
+            Object.values(encounters).forEach(encounter => {
+                const tab = document.createElement('div');
+                tab.className = 'encounter-tab' + (encounter.id === currentEncounter ? ' active' : '');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'encounter-tab-name';
+                nameSpan.textContent = encounter.name;
+                
+                let clickTimer = null;
+                nameSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    if (clickTimer === null) {
+                        clickTimer = setTimeout(() => {
+                            // Single click - switch encounter
+                            switchEncounter(encounter.id);
+                            clickTimer = null;
+                        }, 250);
+                    } else {
+                        // Double click - rename
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        startRenameEncounter(encounter.id, e);
+                    }
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '×';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteEncounter(encounter.id);
+                };
+                deleteBtn.style.cssText = 'margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #ff4757;';
+                
+                tab.appendChild(nameSpan);
+                tab.appendChild(deleteBtn);
+                
+                container.appendChild(tab);
+            });
+        }
+
+        function startRenameEncounter(id, event) {
+            event.stopPropagation();
+            event.preventDefault();
+            
+            const encounter = encounters[id];
+            const tab = event.target.closest('.encounter-tab');
+            const nameSpan = tab.querySelector('.encounter-tab-name');
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = encounter.name;
+            input.onclick = (e) => e.stopPropagation();
+            
+            input.onblur = () => finishRenameEncounter(id, input.value);
+            input.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    finishRenameEncounter(id, input.value);
+                } else if (e.key === 'Escape') {
+                    renderEncounters();
+                }
+            };
+            
+            nameSpan.replaceWith(input);
+            input.focus();
+            input.select();
+        }
+
+        function finishRenameEncounter(id, newName) {
+            const trimmedName = newName.trim();
+            if (trimmedName && encounters[id]) {
+                encounters[id].name = trimmedName;
+                saveData();
+            }
+            renderEncounters();
+        }
+
+        // Update effect name field based on type
+        function updateGlobalEffectNameField() {
+            const typeSelect = document.getElementById('globalEffectType');
+            const label = document.getElementById('globalEffectNameLabel');
+            const durationInput = document.getElementById('globalEffectDuration');
+            const type = typeSelect.value;
+
+            let newField;
+            
+            if (type === 'condition') {
+                label.textContent = 'Condition';
+                durationInput.disabled = false;
+                durationInput.value = '1';
+                newField = document.createElement('select');
+                newField.id = 'globalEffectName';
+                newField.innerHTML = `
+                    <option value="Blinded">Blinded</option>
+                    <option value="Charmed">Charmed</option>
+                    <option value="Deafened">Deafened</option>
+                    <option value="Exhaustion">Exhaustion</option>
+                    <option value="Frightened">Frightened</option>
+                    <option value="Grappled">Grappled</option>
+                    <option value="Incapacitated">Incapacitated</option>
+                    <option value="Invisible">Invisible</option>
+                    <option value="Paralyzed">Paralyzed</option>
+                    <option value="Petrified">Petrified</option>
+                    <option value="Poisoned">Poisoned</option>
+                    <option value="Prone">Prone</option>
+                    <option value="Restrained">Restrained</option>
+                    <option value="Stunned">Stunned</option>
+                    <option value="Unconscious">Unconscious</option>
+                `;
+            } else if (type === 'mastery') {
+                label.textContent = 'Mastery';
+                durationInput.disabled = true;
+                durationInput.value = '1';
+                newField = document.createElement('select');
+                newField.id = 'globalEffectName';
+                newField.innerHTML = `
+                    <option value="Sap">Sap</option>
+                    <option value="Slow">Slow</option>
+                    <option value="Vex">Vex</option>
+                `;
+            } else {
+                label.textContent = 'Spell Name';
+                durationInput.disabled = false;
+                durationInput.value = '1';
+                newField = document.createElement('input');
+                newField.type = 'text';
+                newField.id = 'globalEffectName';
+                newField.placeholder = 'e.g., Bless, Hunter\'s Mark';
+            }
+
+            const oldField = document.getElementById('globalEffectName');
+            oldField.replaceWith(newField);
+        }
+
+        function updateCombatantDropdown() {
+            const dropdown = document.getElementById('globalEffectTarget');
+            if (!dropdown || !currentEncounter) return;
+
+            const combatants = encounters[currentEncounter].combatants;
+            const players = combatants.filter(c => c.isPlayer);
+            const enemies = combatants.filter(c => !c.isPlayer);
+
+            dropdown.innerHTML = '<option value="">Select combatant...</option>';
+
+            if (players.length > 0) {
+                const playerGroup = document.createElement('optgroup');
+                playerGroup.label = 'Players';
+                players.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.name;
+                    playerGroup.appendChild(option);
+                });
+                dropdown.appendChild(playerGroup);
+            }
+
+            if (enemies.length > 0) {
+                const enemyGroup = document.createElement('optgroup');
+                enemyGroup.label = 'Enemies';
+                enemies.forEach(e => {
+                    const option = document.createElement('option');
+                    option.value = e.id;
+                    option.textContent = e.name;
+                    enemyGroup.appendChild(option);
+                });
+                dropdown.appendChild(enemyGroup);
+            }
+        }
+
+        function addGlobalEffect() {
+            if (!currentEncounter) return;
+
+            const targetId = document.getElementById('globalEffectTarget').value;
+            if (!targetId) {
+                alert('Please select a combatant');
+                return;
+            }
+
+            const nameField = document.getElementById('globalEffectName');
+            const name = nameField.value.trim();
+            const type = document.getElementById('globalEffectType').value;
+            let duration = parseInt(document.getElementById('globalEffectDuration').value);
+
+            // Masteries always last 1 round
+            if (type === 'mastery') {
+                duration = 1;
+            }
+
+            if (!name) {
+                alert('Please enter an effect name');
+                return;
+            }
+
+            const combatant = encounters[currentEncounter].combatants.find(c => c.id === targetId);
+            if (!combatant) return;
+
+            combatant.effects.push({
+                id: Date.now().toString(),
+                name,
+                type,
+                duration
+            });
+
+            // Clear form
+            if (nameField.tagName === 'INPUT') {
+                nameField.value = '';
+            }
+            document.getElementById('globalEffectDuration').value = '1';
+            document.getElementById('globalEffectTarget').value = '';
+
+            saveData();
+            renderCombatants();
+        }
+
+        // Update effect name field based on type
+        function updateEffectNameField(combatantId) {
+            const typeSelect = document.getElementById(`effectType-${combatantId}`);
+            const nameContainer = document.getElementById(`effectName-${combatantId}`).parentElement;
+            const label = document.getElementById(`effectNameLabel-${combatantId}`);
+            const durationInput = document.getElementById(`effectDuration-${combatantId}`);
+            const type = typeSelect.value;
+
+            let newField;
+            
+            if (type === 'condition') {
+                label.textContent = 'Condition';
+                durationInput.disabled = false;
+                durationInput.value = '1';
+                newField = document.createElement('select');
+                newField.id = `effectName-${combatantId}`;
+                newField.innerHTML = `
+                    <option value="Blinded">Blinded</option>
+                    <option value="Charmed">Charmed</option>
+                    <option value="Deafened">Deafened</option>
+                    <option value="Exhaustion">Exhaustion</option>
+                    <option value="Frightened">Frightened</option>
+                    <option value="Grappled">Grappled</option>
+                    <option value="Incapacitated">Incapacitated</option>
+                    <option value="Invisible">Invisible</option>
+                    <option value="Paralyzed">Paralyzed</option>
+                    <option value="Petrified">Petrified</option>
+                    <option value="Poisoned">Poisoned</option>
+                    <option value="Prone">Prone</option>
+                    <option value="Restrained">Restrained</option>
+                    <option value="Stunned">Stunned</option>
+                    <option value="Unconscious">Unconscious</option>
+                `;
+            } else if (type === 'mastery') {
+                label.textContent = 'Mastery';
+                durationInput.disabled = true;
+                durationInput.value = '1';
+                newField = document.createElement('select');
+                newField.id = `effectName-${combatantId}`;
+                newField.innerHTML = `
+                    <option value="Sap">Sap</option>
+                    <option value="Slow">Slow</option>
+                    <option value="Vex">Vex</option>
+                `;
+            } else {
+                label.textContent = 'Spell Name';
+                durationInput.disabled = false;
+                durationInput.value = '1';
+                newField = document.createElement('input');
+                newField.type = 'text';
+                newField.id = `effectName-${combatantId}`;
+                newField.placeholder = 'e.g., Bless, Hunter\'s Mark';
+            }
+
+            const oldField = document.getElementById(`effectName-${combatantId}`);
+            oldField.replaceWith(newField);
+        }
+
+        // Combatant Management
+        function addCombatant() {
+            if (!currentEncounter) return;
+
+            const input = document.getElementById('newCombatantName');
+            const name = input.value.trim();
+            const isPlayer = document.getElementById('newCombatantIsPlayer').checked;
+            
+            if (!name) {
+                alert('Please enter a combatant name');
+                return;
+            }
+
+            const combatant = {
+                id: Date.now().toString(),
+                name,
+                isPlayer: isPlayer,
+                effects: []
+            };
+
+            encounters[currentEncounter].combatants.push(combatant);
+            
+            // Sort alphabetically within player/enemy groups
+            sortCombatants();
+            
+            input.value = '';
+            document.getElementById('newCombatantIsPlayer').checked = false;
+            
+            saveData();
+            renderCombatants();
+        }
+
+        function sortCombatants() {
+            if (!currentEncounter) return;
+            
+            const combatants = encounters[currentEncounter].combatants;
+            const players = combatants.filter(c => c.isPlayer).sort((a, b) => a.name.localeCompare(b.name));
+            const enemies = combatants.filter(c => !c.isPlayer).sort((a, b) => a.name.localeCompare(b.name));
+            
+            encounters[currentEncounter].combatants = [...players, ...enemies];
+        }
+
+        function removeCombatant(combatantId) {
+            if (!currentEncounter) return;
+
+            encounters[currentEncounter].combatants = encounters[currentEncounter].combatants
+                .filter(c => c.id !== combatantId);
+            
+            saveData();
+            renderCombatants();
+        }
+
+        function addEffect(combatantId) {
+            if (!currentEncounter) return;
+
+            const nameField = document.getElementById(`effectName-${combatantId}`);
+            const name = nameField.value.trim();
+            const type = document.getElementById(`effectType-${combatantId}`).value;
+            let duration = parseInt(document.getElementById(`effectDuration-${combatantId}`).value);
+
+            // Masteries always last 1 round
+            if (type === 'mastery') {
+                duration = 1;
+            }
+
+            if (!name) {
+                alert('Please enter an effect name');
+                return;
+            }
+
+            const combatant = encounters[currentEncounter].combatants.find(c => c.id === combatantId);
+            if (!combatant) return;
+
+            combatant.effects.push({
+                id: Date.now().toString(),
+                name,
+                type,
+                duration
+            });
+
+            // Clear form
+            if (nameField.tagName === 'INPUT') {
+                nameField.value = '';
+            }
+            document.getElementById(`effectDuration-${combatantId}`).value = '1';
+
+            saveData();
+            renderCombatants();
+        }
+
+        function removeEffect(combatantId, effectId) {
+            if (!currentEncounter) return;
+
+            const combatant = encounters[currentEncounter].combatants.find(c => c.id === combatantId);
+            if (!combatant) return;
+
+            combatant.effects = combatant.effects.filter(e => e.id !== effectId);
+            
+            saveData();
+            renderCombatants();
+        }
+
+        function renderCombatants() {
+            const container = document.getElementById('combatantList');
+            const clearBtn = document.getElementById('clearBtn');
+            const roundDisplay = document.getElementById('roundNumber');
+
+            if (!currentEncounter || !encounters[currentEncounter]) {
+                container.innerHTML = '<div class="empty-state"><h3>No encounter selected</h3><p>Create an encounter to get started</p></div>';
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            const encounter = encounters[currentEncounter];
+            roundDisplay.textContent = encounter.round;
+
+            const combatants = encounter.combatants;
+
+            if (combatants.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No combatants yet</h3><p>Add combatants to track their status</p></div>';
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+            container.innerHTML = '';
+
+            const players = combatants.filter(c => c.isPlayer);
+            const enemies = combatants.filter(c => !c.isPlayer);
+            
+            // Render players first
+            if (players.length > 0) {
+                const playerDivider = document.createElement('div');
+                playerDivider.className = 'combatant-divider';
+                playerDivider.style.marginTop = '20px';
+                playerDivider.innerHTML = '';
+                playerDivider.setAttribute('data-label', 'PLAYERS');
+                container.appendChild(playerDivider);
+                
+                players.forEach((combatant, index) => {
+                    const div = createCombatantElement(combatant, index, true);
+                    container.appendChild(div);
+                });
+            }
+            
+            // Add divider if there are both players and enemies
+            if (players.length > 0 && enemies.length > 0) {
+                const divider = document.createElement('div');
+                divider.className = 'combatant-divider';
+                divider.setAttribute('data-label', 'ENEMIES');
+                container.appendChild(divider);
+            }
+            
+            // Render enemies
+            enemies.forEach((combatant, index) => {
+                const div = createCombatantElement(combatant, players.length + index, false);
+                container.appendChild(div);
+            });
+
+            // Update the dropdown after rendering
+            updateCombatantDropdown();
+        }
+
+        function createCombatantElement(combatant, index, isPlayer) {
+                const div = document.createElement('div');
+                div.className = 'combatant' + (combatant.isPlayer ? ' player' : '');
+                div.draggable = true;
+                div.dataset.index = index;
+
+                div.innerHTML = `
+                    <div class="combatant-header">
+                        <div class="combatant-name${combatant.isPlayer ? ' player' : ''}">${combatant.name}</div>
+                        <div class="combatant-controls">
+                            <button class="danger" onclick="removeCombatant('${combatant.id}')">Remove</button>
+                        </div>
+                    </div>
+                    <div class="effects-list">
+                        ${combatant.effects.map(effect => `
+                            <div class="effect ${effect.type}">
+                                <span>${effect.name}</span>
+                                ${effect.duration > 0 ? `<span class="effect-duration">${effect.duration}</span>` : ''}
+                                <button class="effect-remove" onclick="removeEffect('${combatant.id}', '${effect.id}')">×</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Drag and drop handlers
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('drop', handleDrop);
+                div.addEventListener('dragend', handleDragEnd);
+
+                return div;
+        }
+
+        // Drag and Drop
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+            
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (draggedElement !== this) {
+                const fromIndex = parseInt(draggedElement.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+
+                const combatants = encounters[currentEncounter].combatants;
+                const item = combatants[fromIndex];
+                
+                // Only allow reordering within the same group (player/enemy)
+                const targetItem = combatants[toIndex];
+                if (item.isPlayer === targetItem.isPlayer) {
+                    combatants.splice(fromIndex, 1);
+                    
+                    // Recalculate toIndex after removal
+                    const newToIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+                    combatants.splice(newToIndex, 0, item);
+
+                    saveData();
+                    renderCombatants();
+                }
+            }
+
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            document.querySelectorAll('.combatant').forEach(el => {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        // Round Management
+        function endRound() {
+            if (!currentEncounter) return;
+
+            const encounter = encounters[currentEncounter];
+            encounter.round++;
+
+            // Decrement all effect durations
+            encounter.combatants.forEach(combatant => {
+                combatant.effects.forEach(effect => {
+                    if (effect.duration > 0) {
+                        effect.duration--;
+                    }
+                });
+
+                // Remove expired effects
+                combatant.effects = combatant.effects.filter(e => e.duration > 0);
+            });
+
+            saveData();
+            renderCombatants();
+        }
+
+        function clearEncounter() {
+            if (!currentEncounter) return;
+
+            if (confirm('Clear all combatants and reset to Round 1?')) {
+                encounters[currentEncounter].combatants = [];
+                encounters[currentEncounter].round = 1;
+                saveData();
+                renderCombatants();
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

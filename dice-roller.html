@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Dice Roller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #111827;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .btn {
+            padding: 0.5rem;
+            background-color: #1f2937;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #374151;
+        }
+        
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .result-card {
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .result-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        
+        .result-total.crit {
+            color: #34d399;
+            box-shadow: 0 0 0 4px #34d399;
+        }
+        
+        .result-total.fail {
+            color: #f87171;
+            box-shadow: 0 0 0 4px #f87171;
+        }
+        
+        .result-details {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .kept-roll {
+            color: #34d399;
+            font-weight: bold;
+        }
+        
+        .discarded-roll {
+            color: #6b7280;
+            text-decoration: line-through;
+        }
+        
+        .controls {
+            margin-bottom: 1.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        
+        .control-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+        
+        .control-input {
+            width: 100%;
+            background-color: #1f2937;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1.125rem;
+            color: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .checkbox-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            cursor: pointer;
+        }
+        
+        .checkbox-input {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        
+        .roll-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .roll-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .roll-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        
+        .roll-btn:disabled {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .reroll-btn {
+            background-color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .reroll-btn:hover {
+            background-color: #4b5563;
+        }
+        
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            padding-top: 1rem;
+        }
+        
+        .die-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .die-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .die-btn.selected {
+            box-shadow: 0 0 0 4px white;
+        }
+        
+        .bg-purple { background-color: #a855f7; }
+        .bg-blue { background-color: #3b82f6; }
+        .bg-green { background-color: #22c55e; }
+        .bg-yellow { background-color: #eab308; }
+        .bg-orange { background-color: #f97316; }
+        .bg-red { background-color: #ef4444; }
+        .bg-pink { background-color: #ec4899; }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .history-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .clear-btn {
+            padding: 0.5rem 1rem;
+            background-color: #dc2626;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .clear-btn:hover {
+            background-color: #b91c1c;
+        }
+        
+        .empty-state {
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">
+                <span>🎲</span>
+                <h1>Dice Roller</h1>
+            </div>
+            <button class="btn" id="historyToggle">📜</button>
+        </div>
+
+        <div id="mainView">
+            <div class="content" id="mainContent">
+                <div id="recentResult"></div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">Quantity</label>
+                        <input type="text" inputmode="numeric" class="control-input" id="quantity" value="1">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Modifier</label>
+                        <input type="text" inputmode="numeric" class="control-input" id="modifier" value="0">
+                    </div>
+                    
+                    <div class="checkbox-group" id="advantageGroup" style="display: none;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" id="advantage">
+                            <span>Advantage</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" id="disadvantage">
+                            <span>Disadvantage</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="roll-buttons">
+                <button class="roll-btn" id="rollBtn">Roll 1d20</button>
+                <button class="reroll-btn hidden" id="rerollBtn">
+                    <span>↻</span>
+                    <span>Reroll Last</span>
+                </button>
+                
+                <div class="dice-grid">
+                    <button class="die-btn bg-purple" data-die="d4">d4</button>
+                    <button class="die-btn bg-blue" data-die="d6">d6</button>
+                    <button class="die-btn bg-green" data-die="d8">d8</button>
+                    <button class="die-btn bg-yellow" data-die="d10">d10</button>
+                    <button class="die-btn bg-orange" data-die="d12">d12</button>
+                    <button class="die-btn bg-red selected" data-die="d20">d20</button>
+                    <button class="die-btn bg-pink" data-die="d100">d100</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="historyView" class="hidden">
+            <div class="history-header">
+                <h2 class="history-title">Roll History</h2>
+                <button class="clear-btn hidden" id="clearBtn">Clear History</button>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            selectedDie: 'd20',
+            selectedSides: 20,
+            quantity: 1,
+            modifier: 0,
+            advantage: false,
+            disadvantage: false,
+            rollHistory: [],
+            lastRoll: null,
+            showHistory: false
+        };
+
+        const diceColors = {
+            'd4': 'bg-purple',
+            'd6': 'bg-blue',
+            'd8': 'bg-green',
+            'd10': 'bg-yellow',
+            'd12': 'bg-orange',
+            'd20': 'bg-red',
+            'd100': 'bg-pink'
+        };
+
+        const diceSides = {
+            'd4': 4, 'd6': 6, 'd8': 8, 'd10': 10,
+            'd12': 12, 'd20': 20, 'd100': 100
+        };
+
+        function rollDice(sides) {
+            const array = new Uint32Array(1);
+            crypto.getRandomValues(array);
+            return (array[0] % sides) + 1;
+        }
+
+        function updateUI() {
+            const quantityInput = document.getElementById('quantity');
+            const modifierInput = document.getElementById('modifier');
+            const advantageGroup = document.getElementById('advantageGroup');
+            const rollBtn = document.getElementById('rollBtn');
+            
+            advantageGroup.style.display = state.selectedDie === 'd20' ? 'flex' : 'none';
+            
+            let btnText = `Roll ${state.quantity}${state.selectedDie}`;
+            if (state.modifier !== 0) {
+                btnText += state.modifier > 0 ? ` +${state.modifier}` : ` ${state.modifier}`;
+            }
+            rollBtn.textContent = btnText;
+            
+            // Update roll button color
+            rollBtn.className = 'roll-btn ' + diceColors[state.selectedDie];
+            
+            document.querySelectorAll('.die-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.die === state.selectedDie);
+            });
+            
+            document.getElementById('rerollBtn').classList.toggle('hidden', !state.lastRoll);
+            document.getElementById('clearBtn').classList.toggle('hidden', state.rollHistory.length === 0);
+        }
+
+        function createResultHTML(result) {
+            let critClass = '';
+            if (result.isCrit) critClass = 'crit';
+            if (result.isCritFail) critClass = 'fail';
+            
+            let rollsText = '';
+            if (result.advRolls) {
+                rollsText = 'Rolls: [';
+                result.advRolls.forEach((roll, i) => {
+                    const className = roll === result.keptRoll ? 'kept-roll' : 'discarded-roll';
+                    rollsText += `<span class="${className}">${roll}</span>`;
+                    if (i < result.advRolls.length - 1) rollsText += ', ';
+                });
+                rollsText += `] ${result.timestamp}`;
+            } else {
+                rollsText = `Rolls: [${result.rolls.join(', ')}] ${result.timestamp}`;
+            }
+            
+            let display = `${result.quantity}${result.die}`;
+            if (result.advantage) display += ' (ADV)';
+            if (result.disadvantage) display += ' (DIS)';
+            if (result.modifier !== 0) {
+                display += result.modifier > 0 ? ` +${result.modifier}` : ` ${result.modifier}`;
+            }
+            
+            return `
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-label">${display}</span>
+                        <span class="result-total ${critClass}">${result.total}</span>
+                    </div>
+                    <div class="result-details">${rollsText}</div>
+                </div>
+            `;
+        }
+
+        function updateResults() {
+            const recentResult = document.getElementById('recentResult');
+            if (state.rollHistory.length > 0) {
+                recentResult.innerHTML = createResultHTML(state.rollHistory[0]);
+            } else {
+                recentResult.innerHTML = '';
+            }
+        }
+
+        function updateHistory() {
+            const historyList = document.getElementById('historyList');
+            if (state.rollHistory.length === 0) {
+                historyList.innerHTML = '<p class="empty-state">No rolls yet</p>';
+            } else {
+                historyList.innerHTML = '<div class="history-list">' +
+                    state.rollHistory.map(result => createResultHTML(result)).join('') +
+                    '</div>';
+            }
+        }
+
+        function performRoll(config = null) {
+            const rollConfig = config || {
+                die: state.selectedDie,
+                sides: state.selectedSides,
+                qty: state.quantity,
+                mod: state.modifier,
+                adv: state.advantage,
+                dis: state.disadvantage
+            };
+            
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = true;
+            rollBtn.textContent = 'Rolling...';
+            
+            setTimeout(() => {
+                const rolls = [];
+                let advRolls = null;
+                let keptRoll = null;
+                
+                if (rollConfig.adv || rollConfig.dis) {
+                    const roll1 = rollDice(rollConfig.sides);
+                    const roll2 = rollDice(rollConfig.sides);
+                    advRolls = [roll1, roll2];
+                    keptRoll = rollConfig.adv ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+                    rolls.push(keptRoll);
+                } else {
+                    for (let i = 0; i < rollConfig.qty; i++) {
+                        rolls.push(rollDice(rollConfig.sides));
+                    }
+                }
+                
+                const sum = rolls.reduce((a, b) => a + b, 0);
+                const total = sum + rollConfig.mod;
+                
+                const result = {
+                    die: rollConfig.die,
+                    quantity: rollConfig.qty,
+                    modifier: rollConfig.mod,
+                    advantage: rollConfig.adv,
+                    disadvantage: rollConfig.dis,
+                    rolls: rolls,
+                    advRolls: advRolls,
+                    keptRoll: keptRoll,
+                    total: total,
+                    timestamp: new Date().toLocaleTimeString(),
+                    isCrit: rollConfig.die === 'd20' && (keptRoll === 20 || rolls[0] === 20),
+                    isCritFail: rollConfig.die === 'd20' && (keptRoll === 1 || rolls[0] === 1)
+                };
+                
+                state.rollHistory.unshift(result);
+                state.lastRoll = rollConfig;
+                
+                updateResults();
+                updateHistory();
+                updateUI();
+                
+                rollBtn.disabled = false;
+                rollBtn.textContent = `Roll ${state.quantity}${state.selectedDie}${state.modifier !== 0 ? (state.modifier > 0 ? ` +${state.modifier}` : ` ${state.modifier}`) : ''}`;
+            }, 300);
+        }
+
+        // Event Listeners
+        document.getElementById('quantity').addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val === '' || /^\d+$/.test(val)) {
+                state.quantity = val === '' ? 1 : parseInt(val);
+                updateUI();
+            } else {
+                e.target.value = state.quantity;
+            }
+        });
+
+        document.getElementById('quantity').addEventListener('blur', (e) => {
+            if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                e.target.value = '1';
+                state.quantity = 1;
+                updateUI();
+            }
+        });
+
+        document.getElementById('modifier').addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val === '' || val === '-' || /^-?\d+$/.test(val)) {
+                state.modifier = val === '' || val === '-' ? 0 : parseInt(val);
+                updateUI();
+            } else {
+                e.target.value = state.modifier;
+            }
+        });
+
+        document.getElementById('modifier').addEventListener('blur', (e) => {
+            if (e.target.value === '' || e.target.value === '-') {
+                e.target.value = '0';
+                state.modifier = 0;
+                updateUI();
+            }
+        });
+
+        document.getElementById('advantage').addEventListener('change', (e) => {
+            state.advantage = e.target.checked;
+            if (e.target.checked) {
+                state.disadvantage = false;
+                document.getElementById('disadvantage').checked = false;
+            }
+        });
+
+        document.getElementById('disadvantage').addEventListener('change', (e) => {
+            state.disadvantage = e.target.checked;
+            if (e.target.checked) {
+                state.advantage = false;
+                document.getElementById('advantage').checked = false;
+            }
+        });
+
+        document.getElementById('rollBtn').addEventListener('click', () => performRoll());
+        document.getElementById('rerollBtn').addEventListener('click', () => {
+            if (state.lastRoll) performRoll(state.lastRoll);
+        });
+
+        document.querySelectorAll('.die-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const die = btn.dataset.die;
+                if (state.selectedDie === die) {
+                    state.quantity++;
+                    document.getElementById('quantity').value = state.quantity;
+                } else {
+                    state.selectedDie = die;
+                    state.selectedSides = diceSides[die];
+                    state.quantity = 1;
+                    document.getElementById('quantity').value = '1';
+                    
+                    if (die !== 'd20') {
+                        state.advantage = false;
+                        state.disadvantage = false;
+                        document.getElementById('advantage').checked = false;
+                        document.getElementById('disadvantage').checked = false;
+                    }
+                }
+                updateUI();
+            });
+        });
+
+        document.getElementById('historyToggle').addEventListener('click', () => {
+            state.showHistory = !state.showHistory;
+            document.getElementById('mainView').classList.toggle('hidden', state.showHistory);
+            document.getElementById('historyView').classList.toggle('hidden', !state.showHistory);
+            document.getElementById('historyToggle').textContent = state.showHistory ? '✕' : '📜';
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            state.rollHistory = [];
+            updateHistory();
+            updateUI();
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>

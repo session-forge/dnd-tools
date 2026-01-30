@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e Combat Encounter Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 24px;
+            color: #1f2937;
+        }
+        
+        h2 {
+            font-size: 1.25em;
+            margin-bottom: 16px;
+            color: #374151;
+        }
+        
+        .section {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .section-blue { background-color: #eff6ff; }
+        .section-yellow { background-color: #fefce8; }
+        .section-gray { background-color: #f3f4f6; }
+        .section-green { background-color: #f0fdf4; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.875em;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #374151;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        textarea {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875em;
+            resize: vertical;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+        
+        .btn-success.copied {
+            background-color: #16a34a;
+        }
+        
+        .btn-danger {
+            background-color: transparent;
+            color: #dc2626;
+            padding: 8px;
+        }
+        
+        .btn-danger:hover {
+            background-color: #fee2e2;
+        }
+        
+        .enemy-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #f9fafb;
+        }
+        
+        .enemy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .enemy-title {
+            font-size: 1.125em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detected-info {
+            background-color: #eff6ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.875em;
+        }
+        
+        .suggestions {
+            background-color: #f0fdf4;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.875em;
+        }
+        
+        .suggestions ul {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+        
+        pre {
+            background-color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            overflow-x: auto;
+            font-size: 0.875em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .collapsed {
+            display: none;
+        }
+        
+        .icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>D&D 5e Combat Encounter Generator</h1>
+            
+            <!-- Basic Info -->
+            <div class="section section-blue">
+                <h2>Encounter Information</h2>
+                <div class="grid">
+                    <div>
+                        <label>Encounter Name/Location</label>
+                        <input type="text" id="encounterName" placeholder="e.g., Docks Kidnapping">
+                    </div>
+                    <div>
+                        <label>Party Level</label>
+                        <input type="number" id="partyLevel" placeholder="e.g., 5">
+                    </div>
+                    <div>
+                        <label>Difficulty</label>
+                        <select id="difficulty">
+                            <option>Easy</option>
+                            <option selected>Moderate</option>
+                            <option>Hard</option>
+                            <option>Deadly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Session Number</label>
+                        <input type="number" id="sessionNumber" placeholder="e.g., 12">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enemies -->
+            <div class="section">
+                <div class="header-flex">
+                    <h2>Enemies</h2>
+                    <button class="btn-success" onclick="addEnemy()">
+                        <span class="icon">+</span> Add Enemy
+                    </button>
+                </div>
+                <div id="enemiesList"></div>
+            </div>
+
+            <!-- Rewards -->
+            <div class="section section-yellow">
+                <h2>Rewards (Optional)</h2>
+                <div class="grid">
+                    <div>
+                        <label>Loot (one per line)</label>
+                        <textarea id="loot" rows="4" placeholder="e.g., 50 gp&#10;Potion of Healing"></textarea>
+                    </div>
+                    <div>
+                        <label>Information Gained (one per line)</label>
+                        <textarea id="information" rows="4" placeholder="e.g., Location of hideout&#10;Name of cult leader"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Tags -->
+            <div class="section">
+                <label>Custom Tags (comma-separated)</label>
+                <input type="text" id="customTags" placeholder="e.g., docks, cultists, ambush">
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div class="card">
+            <div class="header-flex">
+                <h2 style="cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="toggleOutput()">
+                    <span id="outputToggle">▼</span> Generated Markdown
+                </h2>
+                <button class="btn-primary" id="copyBtn" onclick="copyToClipboard()">
+                    <span class="icon">📋</span> Copy to Clipboard
+                </button>
+            </div>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        let enemies = [];
+        let enemyIdCounter = 1;
+        let outputVisible = true;
+
+        // Initialize with one enemy
+        addEnemy();
+        updateOutput();
+
+        function addEnemy() {
+            const enemy = {
+                id: enemyIdCounter++,
+                statBlock: '',
+                quantity: 1,
+                priorities: ['', '', ''],
+                expanded: true
+            };
+            enemies.push(enemy);
+            renderEnemies();
+            updateOutput();
+        }
+
+        function removeEnemy(id) {
+            enemies = enemies.filter(e => e.id !== id);
+            renderEnemies();
+            updateOutput();
+        }
+
+        function toggleEnemy(id) {
+            const enemy = enemies.find(e => e.id === id);
+            if (enemy) {
+                enemy.expanded = !enemy.expanded;
+                renderEnemies();
+            }
+        }
+
+        function updateEnemy(id, field, value) {
+            const enemy = enemies.find(e => e.id === id);
+            if (enemy) {
+                enemy[field] = value;
+                renderEnemies();
+                updateOutput();
+            }
+        }
+
+        function updatePriority(id, index, value) {
+            const enemy = enemies.find(e => e.id === id);
+            if (enemy) {
+                enemy.priorities[index] = value;
+                updateOutput();
+            }
+        }
+
+        function renderEnemies() {
+            const container = document.getElementById('enemiesList');
+            container.innerHTML = enemies.map((enemy, idx) => {
+                const parsed = parseStatBlock(enemy.statBlock);
+                const suggestions = generateTacticalSuggestions(parsed);
+                
+                return `
+                    <div class="enemy-card">
+                        <div class="enemy-header">
+                            <div class="enemy-title" onclick="toggleEnemy(${enemy.id})">
+                                <span>${enemy.expanded ? '▼' : '▶'}</span>
+                                Enemy #${idx + 1} ${parsed.name ? `- ${parsed.name}` : ''}
+                            </div>
+                            ${enemies.length > 1 ? `<button class="btn-danger" onclick="removeEnemy(${enemy.id})">🗑️</button>` : ''}
+                        </div>
+                        
+                        <div class="${enemy.expanded ? '' : 'collapsed'}">
+                            <div style="margin-bottom: 16px;">
+                                <label>Quantity</label>
+                                <input type="number" min="1" value="${enemy.quantity}" 
+                                    onchange="updateEnemy(${enemy.id}, 'quantity', parseInt(this.value) || 1)"
+                                    style="width: 100px;">
+                            </div>
+                            
+                            <div style="margin-bottom: 16px;">
+                                <label>Stat Block (paste from source)</label>
+                                <textarea rows="6" 
+                                    onchange="updateEnemy(${enemy.id}, 'statBlock', this.value)"
+                                    placeholder="Paste stat block here...">${enemy.statBlock}</textarea>
+                            </div>
+                            
+                            ${parsed.name ? `
+                                <div class="detected-info">
+                                    <strong>Detected:</strong> ${parsed.name} (${parsed.type})<br>
+                                    ${parsed.cr ? `<strong>CR:</strong> ${parsed.cr} (${parsed.xp} XP)` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            <div>
+                                <label>Tactical Priorities (optional - leave blank to use suggestions)</label>
+                                ${suggestions.length > 0 ? `
+                                    <div class="suggestions">
+                                        <strong>Suggested priorities:</strong>
+                                        <ul>
+                                            ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                                ${[0, 1, 2].map(i => `
+                                    <input type="text" value="${enemy.priorities[i]}" 
+                                        onchange="updatePriority(${enemy.id}, ${i}, this.value)"
+                                        placeholder="Priority ${i + 1}"
+                                        style="margin-bottom: 8px;">
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function parseStatBlock(statBlock) {
+            const lines = statBlock.split('\n').map(l => l.trim()).filter(l => l);
+            
+            const result = {
+                name: '',
+                type: '',
+                cr: '',
+                xp: '',
+                traits: [],
+                actions: [],
+                reactions: []
+            };
+
+            if (lines[0]) {
+                result.name = lines[0];
+            }
+
+            if (lines[1]) {
+                const typeLine = lines[1];
+                const parts = typeLine.split(',');
+                if (parts.length >= 1) {
+                    const typeWithSize = parts[0].trim();
+                    const sizeWords = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
+                    let type = typeWithSize;
+                    sizeWords.forEach(size => {
+                        type = type.replace(size, '').trim();
+                    });
+                    type = type.split(' or ')[0].trim();
+                    result.type = type;
+                }
+            }
+
+            const crLine = lines.find(l => l.startsWith('CR '));
+            if (crLine) {
+                const crMatch = crLine.match(/CR (\d+(?:\/\d+)?)/);
+                const xpMatch = crLine.match(/XP (\d+)/);
+                if (crMatch) result.cr = crMatch[1];
+                if (xpMatch) result.xp = xpMatch[1];
+            }
+
+            const traitsIndex = lines.findIndex(l => l === 'Traits');
+            const actionsIndex = lines.findIndex(l => l === 'Actions');
+            const reactionsIndex = lines.findIndex(l => l === 'Reactions');
+            const bonusActionsIndex = lines.findIndex(l => l === 'Bonus Actions');
+
+            if (traitsIndex !== -1) {
+                const endIndex = actionsIndex !== -1 ? actionsIndex : 
+                               reactionsIndex !== -1 ? reactionsIndex :
+                               bonusActionsIndex !== -1 ? bonusActionsIndex : lines.length;
+                
+                for (let i = traitsIndex + 1; i < endIndex; i++) {
+                    const line = lines[i];
+                    if (line && !line.startsWith('AC ') && !line.startsWith('HP ') && 
+                        !line.startsWith('Speed ') && !line.startsWith('Ability ') &&
+                        !line.startsWith('Str ') && !line.startsWith('Int ') &&
+                        !line.startsWith('Skills ') && !line.startsWith('Senses ') &&
+                        !line.startsWith('Languages ') && !line.startsWith('CR ')) {
+                        
+                        const dotIndex = line.indexOf('.');
+                        if (dotIndex !== -1) {
+                            const name = line.substring(0, dotIndex).trim();
+                            const description = line.substring(dotIndex + 1).trim();
+                            result.traits.push({ name, description });
+                        }
+                    }
+                }
+            }
+
+            if (actionsIndex !== -1) {
+                const endIndex = reactionsIndex !== -1 ? reactionsIndex :
+                               bonusActionsIndex !== -1 ? bonusActionsIndex : lines.length;
+                
+                for (let i = actionsIndex + 1; i < endIndex; i++) {
+                    const line = lines[i];
+                    if (line) {
+                        const dotIndex = line.indexOf('.');
+                        if (dotIndex !== -1) {
+                            const name = line.substring(0, dotIndex).trim();
+                            const description = line.substring(dotIndex + 1).trim();
+                            result.actions.push({ name, description });
+                        }
+                    }
+                }
+            }
+
+            if (reactionsIndex !== -1) {
+                const endIndex = bonusActionsIndex !== -1 ? bonusActionsIndex : lines.length;
+                
+                for (let i = reactionsIndex + 1; i < endIndex; i++) {
+                    const line = lines[i];
+                    if (line) {
+                        const dotIndex = line.indexOf('.');
+                        if (dotIndex !== -1) {
+                            const name = line.substring(0, dotIndex).trim();
+                            const description = line.substring(dotIndex + 1).trim();
+                            result.reactions.push({ name, description });
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function summarizeTrait(name, description) {
+            const lowerDesc = description.toLowerCase();
+            const lowerName = name.toLowerCase();
+            
+            if (lowerName.includes('avoidance')) {
+                return 'Takes no damage on successful save (instead of half), half on failure';
+            }
+            
+            if (lowerName.includes('displacement')) {
+                return 'Attackers have Disadvantage unless Incapacitated or unable to see attacker';
+            }
+            
+            if (lowerName.includes('pack tactics')) {
+                return 'Advantage on attacks if ally within 5 ft of target';
+            }
+            
+            if (lowerName.includes('regen')) {
+                const hpMatch = description.match(/(\d+)\s*hit points?/i);
+                return hpMatch ? `Regains ${hpMatch[1]} HP at start of turn` : 'Regenerates HP each turn';
+            }
+            
+            if (lowerName.includes('magic resistance')) {
+                return 'Advantage on saves vs spells and magical effects';
+            }
+            
+            if (lowerName.includes('flyby')) {
+                return "Doesn't provoke opportunity attacks when flying out of reach";
+            }
+            
+            if (lowerName.includes('cunning action')) {
+                return 'Bonus Action: Dash, Disengage, or Hide';
+            }
+            
+            if (lowerName.includes('parry')) {
+                const acMatch = description.match(/(\d+)/);
+                return acMatch ? `Reaction: +${acMatch[1]} AC against one melee attack` : 'Reaction: Increase AC vs one attack';
+            }
+            
+            if (lowerName.includes('brute')) {
+                return 'Extra weapon damage die on hits';
+            }
+            
+            if (lowerDesc.includes('advantage')) {
+                const advantageContext = description.match(/advantage on ([^.]+)/i);
+                if (advantageContext) return `Advantage on ${advantageContext[1]}`;
+            }
+            
+            if (lowerDesc.includes('resistance to')) {
+                const resistMatch = description.match(/resistance to ([^.]+)/i);
+                if (resistMatch) return `Resistant to ${resistMatch[1]}`;
+            }
+            
+            if (lowerDesc.includes('immunity to')) {
+                const immuneMatch = description.match(/immunity to ([^.]+)/i);
+                if (immuneMatch) return `Immune to ${immuneMatch[1]}`;
+            }
+            
+            const firstSentence = description.split('.')[0];
+            return firstSentence.length > 100 ? firstSentence.substring(0, 97) + '...' : firstSentence;
+        }
+
+        function generateTacticalSuggestions(parsed) {
+            const suggestions = [];
+            
+            if (parsed.traits.some(t => t.name.toLowerCase().includes('pack tactics'))) {
+                suggestions.push('Surround isolated targets to gain Advantage');
+            }
+            if (parsed.traits.some(t => t.name.toLowerCase().includes('flyby'))) {
+                suggestions.push('Use hit-and-run tactics, avoid opportunity attacks');
+            }
+            if (parsed.traits.some(t => t.name.toLowerCase().includes('cunning action'))) {
+                suggestions.push('Use Bonus Action to Disengage/Hide after attacking');
+            }
+            
+            if (parsed.actions.some(a => a.name.toLowerCase().includes('spellcasting'))) {
+                suggestions.push('Prioritize control/debuff spells early');
+            }
+            
+            if (parsed.actions.some(a => a.name.toLowerCase().includes('multiattack'))) {
+                suggestions.push('Focus fire on single targets when possible');
+            }
+
+            const proneAttack = parsed.actions.some(a => a.description.toLowerCase().includes('prone'));
+            if (proneAttack) {
+                suggestions.push('Knock down targets to give allies Advantage');
+            }
+
+            if (suggestions.length === 0) {
+                suggestions.push('Engage nearest threat');
+                suggestions.push('Focus fire on wounded targets');
+            }
+            
+            suggestions.push('Retreat if reduced below half HP');
+
+            return suggestions.slice(0, 3);
+        }
+
+        function generateMarkdown() {
+            const encounterName = document.getElementById('encounterName').value;
+            const partyLevel = document.getElementById('partyLevel').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const sessionNumber = document.getElementById('sessionNumber').value;
+            const loot = document.getElementById('loot').value;
+            const information = document.getElementById('information').value;
+            const customTags = document.getElementById('customTags').value;
+
+            let md = `# Combat - ${encounterName || '[Location/Description]'}\n\n`;
+            
+            let totalXP = 0;
+            enemies.forEach(enemy => {
+                const parsed = parseStatBlock(enemy.statBlock);
+                if (parsed.xp) {
+                    totalXP += parseInt(parsed.xp) * enemy.quantity;
+                }
+            });
+
+            md += `## Encounter Difficulty\n`;
+            md += `- **Party Level:** ${partyLevel || '[X]'}\n`;
+            md += `- **XP Budget:** ${totalXP > 0 ? totalXP + ' XP' : '[X XP]'}\n`;
+            md += `- **Difficulty:** ${difficulty}\n\n`;
+            md += `---\n\n`;
+
+            md += `## Enemies\n`;
+            enemies.forEach((enemy, idx) => {
+                const parsed = parseStatBlock(enemy.statBlock);
+                md += `${idx + 1}. **${parsed.name || '[Enemy Name]'}** - ${parsed.type || '[Type]'} (x${enemy.quantity})\n`;
+            });
+            md += `\n---\n\n`;
+
+            md += `## Enemy Tactics\n`;
+            enemies.forEach((enemy) => {
+                const parsed = parseStatBlock(enemy.statBlock);
+                md += `### ${parsed.name || '[Enemy Name]'}\n`;
+                
+                md += `**Actions per Turn:**\n`;
+                if (parsed.actions.length > 0) {
+                    const multiattack = parsed.actions.find(a => a.name.toLowerCase().includes('multiattack'));
+                    if (multiattack) {
+                        const desc = multiattack.description;
+                        md += `- **Multiattack:** ${desc}\n`;
+                    }
+                    
+                    const attacks = parsed.actions.filter(a => 
+                        !a.name.toLowerCase().includes('multiattack') && 
+                        !a.name.toLowerCase().includes('spellcasting')
+                    );
+                    
+                    if (attacks.length > 0) {
+                        attacks.forEach(action => {
+                            let details = [];
+                            const desc = action.description.toLowerCase();
+                            
+                            if (desc.includes('reach')) {
+                                const reachMatch = action.description.match(/reach (\d+) ft/i);
+                                if (reachMatch && reachMatch[1] !== '5') {
+                                    details.push(`${reachMatch[1]} ft reach`);
+                                }
+                            }
+                            
+                            if (desc.includes('range')) {
+                                const rangeMatch = action.description.match(/range (\d+\/?\d*) ft/i);
+                                if (rangeMatch) {
+                                    details.push(`range ${rangeMatch[1]} ft`);
+                                }
+                            }
+                            
+                            if (desc.includes('prone')) details.push('causes Prone');
+                            if (desc.includes('grappled')) details.push('grapples');
+                            if (desc.includes('restrained')) details.push('restrains');
+                            if (desc.includes('poisoned')) details.push('poisons');
+                            if (desc.includes('stunned')) details.push('stuns');
+                            if (desc.includes('paralyzed')) details.push('paralyzes');
+                            
+                            if (details.length > 0 && desc.includes('large or smaller')) {
+                                details[details.length - 1] += ' (Large or smaller)';
+                            }
+                            
+                            const attackType = desc.includes('melee') ? 'melee' : desc.includes('ranged') ? 'ranged' : '';
+                            if (attackType) details.unshift(attackType);
+                            
+                            const detailStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+                            md += `\t- **${action.name}**${detailStr}\n`;
+                        });
+                    }
+
+                    const spellcasting = parsed.actions.find(a => a.name.toLowerCase().includes('spellcasting'));
+                    if (spellcasting) {
+                        md += `- **Spellcasting**\n`;
+                    }
+                } else {
+                    md += `- 1x **[Action Type]**\n\t- [Weapon/Ability Option]\n`;
+                }
+
+                if (parsed.reactions.length > 0) {
+                    md += `\n**Reactions:**\n`;
+                    parsed.reactions.forEach(reaction => {
+                        md += `- **${reaction.name}** - ${reaction.description}\n`;
+                    });
+                }
+
+                md += `\n**Priority:**\n`;
+                const suggestions = generateTacticalSuggestions(parsed);
+                const priorities = enemy.priorities.filter(p => p.trim());
+                
+                if (priorities.length > 0) {
+                    priorities.forEach(priority => {
+                        md += `- ${priority}\n`;
+                    });
+                } else {
+                    suggestions.forEach(suggestion => {
+                        md += `- ${suggestion}\n`;
+                    });
+                }
+
+                if (parsed.traits.length > 0) {
+                    md += `\n**Special Notes:**\n`;
+                    parsed.traits.forEach(trait => {
+                        const summary = summarizeTrait(trait.name, trait.description);
+                        md += `- **${trait.name}**: ${summary}\n`;
+                    });
+                }
+
+                md += `\n---\n\n`;
+            });
+
+            md += `## Rewards\n`;
+            if (loot.trim() || information.trim()) {
+                if (loot.trim()) {
+                    md += `- **Loot:**\n`;
+                    loot.split('\n').forEach(item => {
+                        if (item.trim()) md += `\t- ${item.trim()}\n`;
+                    });
+                }
+                if (information.trim()) {
+                    md += `- **Information:**\n`;
+                    information.split('\n').forEach(info => {
+                        if (info.trim()) md += `\t- ${info.trim()}\n`;
+                    });
+                }
+            } else {
+                md += `- **Loot:**\n\t- [Items]\n\t- [Gold amount]\n`;
+                md += `- **Information:**\n\t- [Story intel gained]\n`;
+            }
+            md += `\n---\n\n`;
+
+            md += `## Tags\n`;
+            const tags = [`#combat`];
+            if (sessionNumber) tags.push(`#session-${sessionNumber}`);
+            if (encounterName) {
+                const locationTag = encounterName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                tags.push(`#${locationTag}`);
+            }
+            tags.push(`#${difficulty.toLowerCase()}`);
+            if (customTags.trim()) {
+                customTags.split(',').forEach(tag => {
+                    const cleanTag = tag.trim().replace(/^#+/, '');
+                    if (cleanTag) tags.push(`#${cleanTag}`);
+                });
+            }
+            md += tags.join(' ');
+
+            return md;
+        }
+
+        function updateOutput() {
+            const output = document.getElementById('output');
+            output.textContent = generateMarkdown();
+        }
+
+        function toggleOutput() {
+            outputVisible = !outputVisible;
+            const output = document.getElementById('output');
+            const toggle = document.getElementById('outputToggle');
+            output.style.display = outputVisible ? 'block' : 'none';
+            toggle.textContent = outputVisible ? '▼' : '▶';
+        }
+
+        async function copyToClipboard() {
+            try {
+                const markdown = generateMarkdown();
+                await navigator.clipboard.writeText(markdown);
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<span class="icon">✓</span> Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = '<span class="icon">📋</span> Copy to Clipboard';
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Please try again.');
+            }
+        }
+
+        // Update output whenever inputs change
+        document.getElementById('encounterName').addEventListener('input', updateOutput);
+        document.getElementById('partyLevel').addEventListener('input', updateOutput);
+        document.getElementById('difficulty').addEventListener('change', updateOutput);
+        document.getElementById('sessionNumber').addEventListener('input', updateOutput);
+        document.getElementById('loot').addEventListener('input', updateOutput);
+        document.getElementById('information').addEventListener('input', updateOutput);
+        document.getElementById('customTags').addEventListener('input', updateOutput);
+    </script>
+</body>
+</html>
