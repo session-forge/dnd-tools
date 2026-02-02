@@ -61,6 +61,36 @@
             margin-bottom: 1rem;
         }
         
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .left-column {
+            order: 2;
+        }
+        
+        .right-column {
+            order: 1;
+        }
+        
+        @media (min-width: 768px) {
+            .main-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+                align-items: start;
+            }
+            
+            .left-column {
+                order: 1;
+            }
+            
+            .right-column {
+                order: 2;
+            }
+        }
+        
         .result-card {
             background-color: #1f2937;
             border-radius: 0.5rem;
@@ -360,48 +390,54 @@
         </div>
 
         <div id="mainView">
-            <div class="content" id="mainContent">
-                <div id="recentResult"></div>
-                
-                <div class="controls">
-                    <div class="control-group">
-                        <label class="control-label">Quantity</label>
-                        <input type="text" inputmode="numeric" class="control-input" id="quantity" value="1">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label class="control-label">Modifier</label>
-                        <input type="text" inputmode="numeric" class="control-input" id="modifier" value="0">
-                    </div>
-                    
-                    <div class="checkbox-group" id="advantageGroup" style="display: none;">
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="checkbox-input" id="advantage">
-                            <span>Advantage</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="checkbox-input" id="disadvantage">
-                            <span>Disadvantage</span>
-                        </label>
+            <div class="main-layout">
+                <div class="left-column">
+                    <div class="roll-buttons">
+                        <button class="roll-btn" id="rollBtn">Roll 1d20</button>
+                        
+                        <div class="dice-grid">
+                            <button class="die-btn bg-purple" data-die="d4">d4</button>
+                            <button class="die-btn bg-blue" data-die="d6">d6</button>
+                            <button class="die-btn bg-green" data-die="d8">d8</button>
+                            <button class="die-btn bg-yellow" data-die="d10">d10</button>
+                            <button class="die-btn bg-orange" data-die="d12">d12</button>
+                            <button class="die-btn bg-red selected" data-die="d20">d20</button>
+                            <button class="die-btn bg-pink" data-die="d100">d100</button>
+                        </div>
+                        
+                        <div class="stat-roll-section">
+                            <button class="stat-roll-btn" id="statRollBtn">Roll Stats (4d6 drop lowest)</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="roll-buttons">
-                <button class="roll-btn" id="rollBtn">Roll 1d20</button>
                 
-                <div class="dice-grid">
-                    <button class="die-btn bg-purple" data-die="d4">d4</button>
-                    <button class="die-btn bg-blue" data-die="d6">d6</button>
-                    <button class="die-btn bg-green" data-die="d8">d8</button>
-                    <button class="die-btn bg-yellow" data-die="d10">d10</button>
-                    <button class="die-btn bg-orange" data-die="d12">d12</button>
-                    <button class="die-btn bg-red selected" data-die="d20">d20</button>
-                    <button class="die-btn bg-pink" data-die="d100">d100</button>
-                </div>
-                
-                <div class="stat-roll-section">
-                    <button class="stat-roll-btn" id="statRollBtn">Roll Stats (4d6 drop lowest)</button>
+                <div class="right-column">
+                    <div class="content" id="mainContent">
+                        <div id="recentResult"></div>
+                        
+                        <div class="controls">
+                            <div class="control-group">
+                                <label class="control-label">Quantity</label>
+                                <input type="text" inputmode="numeric" class="control-input" id="quantity" value="1">
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Modifier</label>
+                                <input type="text" inputmode="numeric" class="control-input" id="modifier" value="0">
+                            </div>
+                            
+                            <div class="checkbox-group" id="advantageGroup" style="display: none;">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="checkbox-input" id="advantage">
+                                    <span>Advantage</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="checkbox-input" id="disadvantage">
+                                    <span>Disadvantage</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -677,6 +713,7 @@
                     } else {
                         statRollBtn.disabled = false;
                         statRollBtn.textContent = 'Roll Stats (4d6 drop lowest)';
+                        updateUI();
                     }
                 }, 500);
             }
@@ -751,7 +788,9 @@
                     state.selectedDie = die;
                     state.selectedSides = diceSides[die];
                     state.quantity = 1;
+                    state.modifier = 0;
                     document.getElementById('quantity').value = '1';
+                    document.getElementById('modifier').value = '0';
                     
                     if (die !== 'd20') {
                         state.advantage = false;
