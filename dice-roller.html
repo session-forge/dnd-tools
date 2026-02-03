@@ -493,9 +493,19 @@
         };
 
         function rollDice(sides) {
-            const array = new Uint32Array(1);
-            crypto.getRandomValues(array);
-            return (array[0] % sides) + 1;
+            // Calculate the largest multiple of 'sides' that fits in Uint32
+            const maxValidValue = Math.floor(4294967296 / sides) * sides;
+            
+            while (true) {
+                const array = new Uint32Array(1);
+                crypto.getRandomValues(array);
+                
+                // Reject and retry if the random value is above the max valid value
+                // This eliminates modulo bias for perfectly uniform distribution
+                if (array[0] < maxValidValue) {
+                    return (array[0] % sides) + 1;
+                }
+            }
         }
 
         function updateUI() {
