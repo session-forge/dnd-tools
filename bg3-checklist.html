@@ -332,12 +332,47 @@
             display: block;
         }
 
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: none;
+            opacity: 0.9;
+        }
+
+        .scroll-to-top:hover {
+            background: #3182ce;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+            opacity: 1;
+        }
+
+        .scroll-to-top:active {
+            transform: translateY(-1px);
+        }
+
+        .scroll-to-top.show {
+            display: block;
+        }
+
     </style>
 </head>
 <body>
     <div class="sticky-nav">
         <div class="nav-content">
-            <h1>BG3 Checklist <span style="font-size: 0.5em; color: #718096; font-weight: normal;">v1.0</span></h1>
+            <h1>BG3 Checklist <span style="font-size: 0.5em; color: #718096; font-weight: normal;">v1.1</span></h1>
             <div class="tab-controls">
                 <button class="tab-btn active" data-act="act1" onclick="switchTab('act1')">Act 1</button>
                 <button class="tab-btn" data-act="act2" onclick="switchTab('act2')">Act 2</button>
@@ -348,6 +383,11 @@
             </select>
         </div>
     </div>
+
+    <!-- Scroll to top button -->
+    <button id="scrollToTop" class="scroll-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to top">
+        ↑
+    </button>
 
     <div class="container act-container" id="act1-container">
         <!-- Act 1 sections will be generated here -->
@@ -2342,6 +2382,17 @@
                 progressText.textContent = `${completed} / ${section.items.length} completed (${Math.round(percentage)}%)`;
             }
         }
+
+        // Scroll to top button functionality
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+        
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('show');
+            } else {
+                scrollToTopBtn.classList.remove('show');
+            }
+        });
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', initChecklist);
