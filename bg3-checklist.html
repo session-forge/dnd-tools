@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BG3 Act 1 Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+            color: #d4d4d8;
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        .sticky-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 15px 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            border-bottom: 2px solid #4a5568;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-content h1 {
+            color: #90cdf4;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .nav-content select {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 15px;
+            font-size: 16px;
+            background: #1a202c;
+            color: #d4d4d8;
+            border: 1px solid #4a5568;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 120px;
+            }
+
+            .sticky-nav {
+                padding: 10px 15px;
+            }
+
+            .nav-content {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .nav-content h1 {
+                font-size: 20px;
+                text-align: center;
+            }
+
+            .nav-content select {
+                max-width: none;
+                width: 100%;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .section-header h2 {
+                font-size: 18px;
+            }
+
+            .checklist-item {
+                font-size: 14px;
+            }
+        }
+
+        .nav-content select:hover {
+            background: #2d3748;
+            border-color: #63b3ed;
+        }
+
+        .nav-content select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            background: rgba(45, 55, 72, 0.6);
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #374151 0%, #2d3748 100%);
+        }
+
+        .section-header h2 {
+            color: #90cdf4;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .section-header .toggle-icon {
+            color: #90cdf4;
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .section-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            padding: 20px;
+            display: block;
+        }
+
+        .section-content.hidden {
+            display: none;
+        }
+
+        .checklist-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(74, 85, 104, 0.3);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            flex-shrink: 0;
+        }
+
+        .checklist-item label {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tooltip-text {
+            flex-basis: 100%;
+            margin-left: 32px; /* Indent to align with label text */
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #63b3ed;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            line-height: 1.5;
+            flex: 1;
+            transition: color 0.2s ease;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + label {
+            color: #718096;
+            text-decoration: line-through;
+        }
+
+        .checklist-item:hover label {
+            color: #90cdf4;
+        }
+
+        .time-sensitive {
+            color: #fc8181;
+            font-weight: 600;
+            margin-right: 6px;
+            font-size: 16px;
+        }
+
+        .time-sensitive-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .time-sensitive-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 25px;
+            top: -5px;
+            background: #2d3748;
+            color: #fc8181;
+            padding: 6px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 1000;
+            font-size: 12px;
+            border: 1px solid #fc8181;
+            font-weight: normal;
+        }
+
+        .wiki-link {
+            color: #90cdf4;
+            text-decoration: none;
+            border-bottom: 1px dotted #90cdf4;
+        }
+
+        .wiki-link:hover {
+            color: #63b3ed;
+            border-bottom: 1px solid #63b3ed;
+        }
+
+        /* Mobile: Click-to-show tooltip */
+        .tooltip-text {
+            display: none;
+            background: #2d3748;
+            color: #fbbf24;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0 0 0;
+            border-left: 3px solid #ff6b6b;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .tooltip-text.show {
+            display: block;
+        }
+
+        /* Make time-sensitive icon obviously clickable on touch devices */
+        @media (hover: none) {
+            .time-sensitive {
+                cursor: pointer;
+                padding: 2px 4px;
+                border-radius: 3px;
+                background: rgba(252, 129, 129, 0.1);
+            }
+        }
+
+        .progress-bar {
+            background: rgba(26, 32, 44, 0.5);
+            height: 8px;
+            border-radius: 4px;
+            margin: 15px 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #63b3ed 0%, #90cdf4 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #90cdf4;
+            font-size: 14px;
+            margin: 5px 20px 15px;
+        }
+
+        .tab-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 8px 20px;
+            background: #1a202c;
+            color: #d4d4d8;
+            border: 1px solid #4a5568;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: #2d3748;
+            border-color: #63b3ed;
+        }
+
+        .tab-btn.active {
+            background: #63b3ed;
+            color: #1a202c;
+            border-color: #90cdf4;
+        }
+
+        .act-container {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sticky-nav">
+        <div class="nav-content">
+            <h1>BG3 Checklist</h1>
+            <div class="tab-controls">
+                <button class="tab-btn active" data-act="act1" onclick="switchTab('act1')">Act 1</button>
+                <button class="tab-btn" data-act="act2" onclick="switchTab('act2')">Act 2</button>
+                <button class="tab-btn" data-act="act3" onclick="switchTab('act3')">Act 3</button>
+            </div>
+            <select id="sectionNav" onchange="navigateToSection(this.value)">
+                <option value="">Jump to section...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container act-container" id="act1-container">
+        <!-- Act 1 sections will be generated here -->
+    </div>
+
+    <div class="container act-container" id="act2-container" style="display: none;">
+        <!-- Act 2 sections will be generated here -->
+    </div>
+
+    <div class="container act-container" id="act3-container" style="display: none;">
+        <!-- Act 3 sections will be generated here -->
+    </div>
+
+    <script>
+        // Comprehensive checklist data from the Gamestegy guide
+        // Items marked with ⏰ are time-sensitive (fail on long rest, become unavailable after certain events, etc.)
+        const act1Data = [
+            {
+                id: 'nautiloid',
+                title: 'Nautiloid',
+                items: [
+                    '⏰|Time-limited: Must complete before crash|Escape the Nautiloid',
+                    '⏰|Must survive Nautiloid to get Act 2 summon|Befriend [Us](https://bg3.wiki/wiki/Us) (if survives, gain Summon Us in Act 2)',
+                    '⏰|Only available on Nautiloid|Save [Shadowheart](https://bg3.wiki/wiki/Shadowheart) from pod',
+                    '⏰|Remove early for future item|Remove [[Shadowheart](https://bg3.wiki/wiki/Shadowheart)\'s Chain Shirt](https://bg3.wiki/wiki/Chain_Shirt) and keep in inventory',
+                    'Read [Rune Slate](https://bg3.wiki/wiki/Rune_Slate) (helps with Omeluum quest later)',
+                    'Take [Dark Mind](https://bg3.wiki/wiki/Dark_Mind) (readable in Act 2 Mindflayer Colony)',
+                    'Take [Slave Mind](https://bg3.wiki/wiki/Slave_Mind) (readable in Act 2 Mindflayer Colony)',
+                    '⏰|Must use Command: Drop before Zhalk dies|Get [Everburn Blade](https://bg3.wiki/wiki/Everburn_Blade) (use Command: Drop on Commander Zhalk)'
+                ]
+            },
+            {
+                id: 'ravaged-beach',
+                title: 'Wilderness - Ravaged Beach',
+                items: [
+                    'Start [Daughter of Darkness](https://bg3.wiki/wiki/Daughter_of_Darkness) ([Shadowheart](https://bg3.wiki/wiki/Shadowheart) quest)',
+                    'Start [The Pale Elf](https://bg3.wiki/wiki/The_Pale_Elf) ([Astarion](https://bg3.wiki/wiki/Astarion) quest)',
+                    'Recruit [Shadowheart](https://bg3.wiki/wiki/Shadowheart)',
+                    'Recruit [Astarion](https://bg3.wiki/wiki/Astarion)'
+                ]
+            },
+            {
+                id: 'roadside-cliffs',
+                title: 'Wilderness - Roadside Cliffs',
+                items: [
+                    'Start [The Wizard of Waterdeep](https://bg3.wiki/wiki/The_Wizard_of_Waterdeep) ([Gale](https://bg3.wiki/wiki/Gale) quest)',
+                    'Start Free Lae\'zel',
+                    'Get [Silver Pendant](https://bg3.wiki/wiki/Silver_Pendant) from outpost',
+                    'Get [Spider Egg Sac](https://bg3.wiki/wiki/Spider_Egg_Sac) from Rocky Crevice',
+                    'Recruit [Gale](https://bg3.wiki/wiki/Gale)',
+                    'Recruit Lae\'zel'
+                ]
+            },
+            {
+                id: 'overgrown-ruins',
+                title: 'Wilderness - Overgrown Ruins',
+                items: [
+                    'Handle Adventuring Party encounter',
+                    'Start [Explore the Ruins](https://bg3.wiki/wiki/Explore_the_Ruins) quest',
+                    'Read [Book of Dead Gods](https://bg3.wiki/wiki/Book_of_Dead_Gods)',
+                    'Defeat Bandit encounter',
+                    'Get Soul Coin from trapped Sarcophagus (Dank Crypt)',
+                    'Get Soul Coin from sarcophagus near [Book of Dead Gods](https://bg3.wiki/wiki/Book_of_Dead_Gods)',
+                    'Get Soul Coin from Withers\' sarcophagus',
+                    'Get [The Amulet of Lost Voices](https://bg3.wiki/wiki/The_Amulet_of_Lost_Voices) (Dank Crypt chest)',
+                    'Get The Watcher\'s Guide (sarcophagus in Dank Crypt)'
+                ]
+            },
+            {
+                id: 'emerald-grove',
+                title: 'Emerald Grove',
+                items: [
+                    '⏰|Aradin needed for Act 3, Berth for locket quest|Defeat Goblin Raid (protect Berth & Aradin - both must survive)',
+                    '⏰|Only if Berth survives raid|[Return the Locket](https://bg3.wiki/wiki/Return_the_Locket) (if Berth survives)',
+                    '⏰|Only available during/after goblin raid|Get [Gloves of Power](https://bg3.wiki/wiki/Gloves_of_Power) (from Za\'Krug)',
+                    'Save Nadira from Bugbear Assassin',
+                    'Get [Soul Coin](https://bg3.wiki/wiki/Soul_Coin) from Nadira',
+                    'Heal Pandirna (use Lesser Restoration or Amulet of Silvanus)',
+                    'Recruit [Wyll](https://bg3.wiki/wiki/Wyll)',
+                    '⏰|Must not kill in Act 1 for Act 3 reward|Speak with [Strange Ox](https://bg3.wiki/wiki/Strange_Ox)',
+                    '⏰|Killing Ox locks you out of Act 3 item|Get [Shapeshifter\'s Boon Ring](https://bg3.wiki/wiki/Shapeshifter%27s_Boon_Ring) (kill Strange Ox OR peaceful method)',
+                    'Perform with [Alfira](https://bg3.wiki/wiki/Alfira) (gain Lute, proficiency, Bardic Inspiration)',
+                    '⏰|Dark Urge only: Triggers on long rest|[The Dark Urge: Alfira encounter](https://bg3.wiki/wiki/The_Dark_Urge) (Dark Urge origin only)',
+                    '⏰|Complete before [Save the Refugees](https://bg3.wiki/wiki/Save_the_Refugees)|Complete [Save Arabella](https://bg3.wiki/wiki/Save_Arabella) (receive [Komira\'s Locket](https://bg3.wiki/wiki/Komira%27s_Locket))',
+                    '⏰|Complete before [Save the Refugees](https://bg3.wiki/wiki/Save_the_Refugees)|Complete [Investigate the Beach](https://bg3.wiki/wiki/Investigate_the_Beach)',
+                    'Get [Ring of Colour Spray](https://bg3.wiki/wiki/Ring_of_Colour_Spray)',
+                    '⏰|Complete before Rescue Halsin|Complete [Investigate Kagha](https://bg3.wiki/wiki/Investigate_Kagha) (can get: [Broodmother\'s Revenge](https://bg3.wiki/wiki/Broodmother%27s_Revenge), [Pale Oak](https://bg3.wiki/wiki/Pale_Oak), [Hellrider\'s Pride](https://bg3.wiki/wiki/Hellrider%27s_Pride))',
+                    '⏰|Do after [Investigate Kagha](https://bg3.wiki/wiki/Investigate_Kagha), before Save Refugees|Complete [Steal the Sacred Idol](https://bg3.wiki/wiki/Steal_the_Sacred_Idol) (get [Ring of Protection](https://bg3.wiki/wiki/Ring_of_Protection))',
+                    'Complete [Save the Refugees](https://bg3.wiki/wiki/Save_the_Refugees) (can get [Wapira\'s Crown](https://bg3.wiki/wiki/Wapira%27s_Crown))',
+                    '⏰|Rath disappears after Grove resolved|Complete [Rescue the Druid Halsin](https://bg3.wiki/wiki/Rescue_the_Druid_Halsin) (unlock Hidden Vault: [Sorrow](https://bg3.wiki/wiki/Sorrow), [Robe of Summer](https://bg3.wiki/wiki/Robe_of_Summer))',
+                    'Get [Amulet of Silvanus](https://bg3.wiki/wiki/Amulet_of_Silvanus)',
+                    'Get [Cap of Curing](https://bg3.wiki/wiki/Cap_of_Curing)',
+                    'Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (Enclave Library)',
+                    '⏰|Get Infernal Iron #1 from Blighted Village for [Karlach](https://bg3.wiki/wiki/Karlach)|Get [Infernal Iron](https://bg3.wiki/wiki/Infernal_Iron) from Blighted Village',
+                    '⏰|Start after Kagha, before Defeat Goblins|Start [Save the Goblin Sazza](https://bg3.wiki/wiki/Save_the_Goblin_Sazza) (optional evil path)'
+                ]
+            },
+            {
+                id: 'arron-vendor',
+                title: 'Emerald Grove - Arron (Vendor)',
+                items: [
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get Dragon\'s Grasp',
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get [Gloves of Missile Snaring](https://bg3.wiki/wiki/Gloves_of_Missile_Snaring)',
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get [Hedge Wanderer Armour](https://bg3.wiki/wiki/Hedge_Wanderer_Armour)',
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get [Rain Dancer](https://bg3.wiki/wiki/Rain_Dancer)',
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get [Ring of Flinging](https://bg3.wiki/wiki/Ring_of_Flinging)',
+                    '⏰|Vendor leaves after Grove resolution|Buy/Get [Spellthief](https://bg3.wiki/wiki/Spellthief)'
+                ]
+            },
+            {
+                id: 'dammon-vendor',
+                title: 'Emerald Grove - Dammon (Vendor)',
+                items: [
+                    '⏰|Vendor leaves after Grove resolution|Buy [Hunting Shortbow](https://bg3.wiki/wiki/Hunting_Shortbow)',
+                    '⏰|Vendor leaves after Grove resolution|Buy [Safeguard Shield](https://bg3.wiki/wiki/Safeguard_Shield)'
+                ]
+            },
+            {
+                id: 'volo-ethel-grove',
+                title: 'Emerald Grove - Other Vendors',
+                items: [
+                    '⏰|Volo moves to Goblin Camp later|Get The Whispering Promise from Volo',
+                    '⏰|Ethel moves to Sunlit Wetlands|Get Corellon\'s Grace from Auntie Ethel'
+                ]
+            },
+            {
+                id: 'underground-passage',
+                title: 'Emerald Grove - Underground Passage',
+                items: [
+                    'Get [Key of the Ancients](https://bg3.wiki/wiki/Key_of_the_Ancients)',
+                    'Get Nature\'s Snare'
+                ]
+            },
+            {
+                id: 'forest-area',
+                title: 'Wilderness - Forest Area',
+                items: [
+                    'Pick up [Shaft of a Broken Spear](https://bg3.wiki/wiki/Shaft_of_a_Broken_Spear) (from Edowin)',
+                    'Get Mind Flayer Parasite Specimen (from Edowin)',
+                    'Get [Fleetfingers](https://bg3.wiki/wiki/Fleetfingers)'
+                ]
+            },
+            {
+                id: 'owlbear-nest',
+                title: 'Wilderness - Owlbear Nest',
+                items: [
+                    'Get The Oak Father\'s Embrace',
+                    'Get [Head of a Broken Spear](https://bg3.wiki/wiki/Head_of_a_Broken_Spear)',
+                    'Craft [Vision of the Absolute](https://bg3.wiki/wiki/Vision_of_the_Absolute) (combine head + shaft)',
+                    'Get [Moondrop Pendant](https://bg3.wiki/wiki/Moondrop_Pendant) (Selune sealed chest)',
+                    '⏰|Must spare to recruit later at Goblin Camp|Spare the Owlbear Cub',
+                    'Read [Selûnite Rite](https://bg3.wiki/wiki/Sel%C3%BBnite_Rite) (helps [Shadowheart](https://bg3.wiki/wiki/Shadowheart) Nightsong point)'
+                ]
+            },
+            {
+                id: 'blighted-village',
+                title: 'Wilderness - Blighted Village',
+                items: [
+                    'Recruit Scratch the Dog',
+                    'Defeat goblins in village',
+                    'Get [Haste Helm](https://bg3.wiki/wiki/Haste_Helm)',
+                    'Start Finish the Masterwork Weapon quest',
+                    'Craft [Sussur Dagger](https://bg3.wiki/wiki/Sussur_Dagger)',
+                    'Craft [Sussur Greatsword](https://bg3.wiki/wiki/Sussur_Greatsword)',
+                    'Craft [Sussur Sickle](https://bg3.wiki/wiki/Sussur_Sickle)',
+                    'Get [The Speedy Lightfeet](https://bg3.wiki/wiki/The_Speedy_Lightfeet)',
+                    'Decide fate of captured gnome',
+                    'Get [Very Heavy Greataxe](https://bg3.wiki/wiki/Very_Heavy_Greataxe)',
+                    '⏰|If recruited, ogres die after 3 long rests|Deal with Ogres (recruit with Lump\'s War Horn OR kill for [Warped Headband of Intellect](https://bg3.wiki/wiki/Warped_Headband_of_Intellect))',
+                    'Get [Steelforged Sword](https://bg3.wiki/wiki/Steelforged_Sword)'
+                ]
+            },
+            {
+                id: 'apothecary-cellar',
+                title: 'Blighted Village - Apothecary\'s Cellar',
+                items: [
+                    'Explore the Apothecary\'s Cellar',
+                    'Get [Bracers of Defence](https://bg3.wiki/wiki/Bracers_of_Defence)',
+                    'Read/Destroy [Necromancy of Thay](https://bg3.wiki/wiki/Necromancy_of_Thay) (can gain Speak with Dead ritual, Forbidden Knowledge)',
+                    'Get Scroll of Summon Quasit (summon Shovel familiar)'
+                ]
+            },
+            {
+                id: 'whispering-depths',
+                title: 'Blighted Village - Whispering Depths',
+                items: [
+                    'Get [Dark Amethyst](https://bg3.wiki/wiki/Dark_Amethyst) (for [Necromancy of Thay](https://bg3.wiki/wiki/Necromancy_of_Thay))',
+                    'Get Poisoner\'s Robe',
+                    'Get [Spiderstep Boots](https://bg3.wiki/wiki/Spiderstep_Boots)',
+                    'Get [Spurred Band](https://bg3.wiki/wiki/Spurred_Band)'
+                ]
+            },
+            {
+                id: 'risen-road',
+                title: 'Wilderness - The Risen Road',
+                items: [
+                    'Complete [Hunt the Devil](https://bg3.wiki/wiki/Hunt_the_Devil) (help paladins)',
+                    'Get [Sword of Justice](https://bg3.wiki/wiki/Sword_of_Justice) (from Anders)',
+                    'Get Soul Coin (tollhouse roof)',
+                    '⏰|[Karlach](https://bg3.wiki/wiki/Karlach) dies if not recruited before killing Goblins|Recruit [Karlach](https://bg3.wiki/wiki/Karlach)',
+                    'Start [Our Fiery Friend](https://bg3.wiki/wiki/Our_Fiery_Friend)',
+                    'Start The Hellion\'s Heart (bring Infernal Iron to Dammon)',
+                    'Get Smuggler\'s Ring',
+                    'Start [Find the Missing Shipment](https://bg3.wiki/wiki/Find_the_Missing_Shipment)',
+                    'Defeat Flind and Gnolls',
+                    'Get Mind Flayer Parasite Specimen (from Flind)',
+                    'Get [Speedy Reply](https://bg3.wiki/wiki/Speedy_Reply)',
+                    'Get [Shattered Flail](https://bg3.wiki/wiki/Shattered_Flail) (from Flind)',
+                    '⏰|Must save Rugan or body despawns eventually|Get password for Zhentarim Hideout (save Rugan or use Speak with Dead)',
+                    'Get Reason\'s Grasp',
+                    'Get [Gloves of Heroism](https://bg3.wiki/wiki/Gloves_of_Heroism) (tollhouse basement)'
+                ]
+            },
+            {
+                id: 'waukeens-rest',
+                title: 'Wilderness - Waukeen\'s Rest',
+                items: [
+                    'Start [Rescue the Grand Duke](https://bg3.wiki/wiki/Rescue_the_Grand_Duke)',
+                    '⏰|Building burns down after a few turns|Complete [Rescue the Trapped Man](https://bg3.wiki/wiki/Rescue_the_Trapped_Man)',
+                    'Get [Hamarhraft](https://bg3.wiki/wiki/Hamarhraft) (upstairs gilded chest)',
+                    'Get Svartlebee\'s Woundseeker (from Gauntlet Yeva)',
+                    '⏰|Only if Florrick saved from fire|Get reward weapon from Counsellor Florrick: [The Sparky Points](https://bg3.wiki/wiki/The_Sparky_Points) OR [The Joltshooter](https://bg3.wiki/wiki/The_Joltshooter) OR [The Spellsparkler](https://bg3.wiki/wiki/The_Spellsparkler)',
+                    'Speak with the Frightened Ox'
+                ]
+            },
+            {
+                id: 'zhentarim-hideout',
+                title: 'Wilderness - Zhentarim Hideout',
+                items: [
+                    'Enter Zhentarim Hideout',
+                    'Start [Free the Artist](https://bg3.wiki/wiki/Free_the_Artist)',
+                    'Get [Harold](https://bg3.wiki/wiki/Harold)',
+                    'Get [Abyss Beckoners](https://bg3.wiki/wiki/Abyss_Beckoners) (ornate chest)',
+                    '⏰|Only available if shipment delivered intact|Buy [Titanstring Bow](https://bg3.wiki/wiki/Titanstring_Bow) (if completed Missing Shipment)',
+                    'Get [Gloves of Thievery](https://bg3.wiki/wiki/Gloves_of_Thievery)',
+                    'Get [Gloves of Hail of Thorns](https://bg3.wiki/wiki/Gloves_of_Hail_of_Thorns)',
+                    'Get [Rupturing Blade](https://bg3.wiki/wiki/Rupturing_Blade)',
+                    'Get [The Jolty Vest](https://bg3.wiki/wiki/The_Jolty_Vest)',
+                    'Get [Giantbreaker](https://bg3.wiki/wiki/Giantbreaker)'
+                ]
+            },
+            {
+                id: 'goblin-camp-outside',
+                title: 'Goblin Camp - Outside Area',
+                items: [
+                    '⏰|Only if cub spared earlier at nest|Win Game of Chicken (recruit Owlbear Cub)',
+                    'Get Crusher\'s Ring (kiss foot or kill Crusher)',
+                    'Get Glowing Shield'
+                ]
+            },
+            {
+                id: 'goblin-camp-grat',
+                title: 'Goblin Camp - Grat the Trader',
+                items: [
+                    '⏰|Camp becomes hostile after killing leaders|Buy Swiresy Shoes',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Gloves of Archery',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Boots of Aid and Comfort',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Returning Pike',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Doom Hammer',
+                    '⏰|Camp becomes hostile after killing leaders|Buy The Whispering Promise (if not from Volo)'
+                ]
+            },
+            {
+                id: 'goblin-camp-roah',
+                title: 'Goblin Camp - Roah Moonglow',
+                items: [
+                    '⏰|Camp becomes hostile after killing leaders|Buy Bow of Awareness',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Blooded Greataxe',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Gold Wyrmling Staff',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Monster Slayer Glaive',
+                    '⏰|Camp becomes hostile after killing leaders|Buy Hunter\'s Dagger'
+                ]
+            },
+            {
+                id: 'shattered-sanctum',
+                title: 'Goblin Camp - Shattered Sanctum',
+                items: [
+                    'Participate in Abdirak\'s Ritual (gain Loviatar\'s Love)',
+                    'Get Loviatar\'s Scourge',
+                    'Get Ritual Axe',
+                    'Get Ritual Dagger',
+                    '⏰|Complete before [Save the Refugees](https://bg3.wiki/wiki/Save_the_Refugees)|Complete [Rescue Volo](https://bg3.wiki/wiki/Rescue_Volo) (get Blazer of Benevolence)',
+                    'Get Volo\'s Ersatz Eye (let Volo do surgery - gain See Invisibility)',
+                    'Complete [Rescue the Tortured Prisoner](https://bg3.wiki/wiki/Rescue_the_Tortured_Prisoner)',
+                    'Get Jagged Spear',
+                    'Handle Brand of the Absolute event (Priestess Gut)',
+                    'Get Priestess Gut\'s Tadpole',
+                    'Get Absolute\'s Talisman',
+                    'Get Absolute\'s Warboard',
+                    '⏰|Only if Sazza escorted from Grove|Get Assassin\'s Touch (from Minthara if Sazza escorted)',
+                    '⏰|Can recruit in Act 2 if knocked out only|Decide Minthara\'s fate (recruit, knock out, or kill for: Xyanyde, Boots of Striding, Spidersilk Armour, Tadpole)',
+                    'Get The Watersparkers',
+                    'Deal with Dror Ragzlin (get Faithbreaker, Tadpole)',
+                    'Loot Dror Ragzlin\'s Vault (Springstep Boots, Amulet of Selûne\'s Chosen, Gloves of the Growling Underdog, Infernal Iron)',
+                    'Get Ring of Poison Resistance',
+                    '⏰|Triggers Grove/Camp resolution|Complete [Defeat the Goblins](https://bg3.wiki/wiki/Defeat_the_Goblins)'
+                ]
+            },
+            {
+                id: 'worg-pens',
+                title: 'Goblin Camp - Worg Pens',
+                items: [
+                    'Deal with Beastmaster Zurk & Wargs',
+                    'Get Worgfang',
+                    'Get Beastmaster\'s Chain',
+                    'Get Linebreaker Boots'
+                ]
+            },
+            {
+                id: 'defiled-temple',
+                title: 'Goblin Camp - Defiled Temple',
+                items: [
+                    'Deal with Polma',
+                    'Get Amulet of Misty Step'
+                ]
+            },
+            {
+                id: 'sunlit-wetlands',
+                title: 'Wilderness - Sunlit Wetlands',
+                items: [
+                    'Handle Druid Sanctuary encounter (get The Sparkle Hands, Wood Woad Shield)',
+                    'Talk with Gandrel',
+                    'Get Gandrel\'s Aspiration'
+                ]
+            },
+            {
+                id: 'hag-lair',
+                title: 'Sunlit Wetlands - Gnarled Teahouse & Overgrown Tunnel',
+                items: [
+                    'Speak with Auntie Ethel',
+                    'Investigate people in entrance gallery',
+                    'Deal with Hag\'s Pawns',
+                    'Defeat the Hag',
+                    'Get Tarnished Charm',
+                    'Get The Ever-Seeing Eye',
+                    'Get Staff of Crones',
+                    'Save Mayrina (optional interaction)'
+                ]
+            },
+            {
+                id: 'mountain-pass',
+                title: 'Wilderness - Mountain Pass',
+                items: [
+                    'Speak with Kith\'rak Voss',
+                    'Get Githyanki Greatsword',
+                    'Get Githyanki Crossbow',
+                    'Get Silver Sword of the Astral Plane'
+                ]
+            },
+            {
+                id: 'underdark-main',
+                title: 'Underdark - Main Area',
+                items: [
+                    'Reach Underdark (via Defiled Temple, Zhentarim Hideout, or Whispering Depths)',
+                    'Defeat Minotaur (get Amulet of the Unworthy)',
+                    'Defeat Bulette (get Bloodguzzler Garb)',
+                    'Get Phalar Aluve (sword stuck in rock)',
+                    'Investigate Petrified Drow (get Icy Helve, The Blast Pendant, Frayed Drow Hood)',
+                    'Defeat Spectator (get The Spectator Eyes)',
+                    'Get Drow Studded Leather Armour',
+                    'Get Explorer\'s Ring',
+                    'Defeat Hook Horrors and Filro the Forgotten (get Icy Crystal)',
+                    'Get Sussur Tree Bark',
+                    'Get Helmet of Autonomy'
+                ]
+            },
+            {
+                id: 'selunite-outpost',
+                title: 'Underdark - Selunite Outpost',
+                items: [
+                    'Get Helmet of Smiting',
+                    'Get Luminous Armour'
+                ]
+            },
+            {
+                id: 'myconid-burg',
+                title: 'Underdark - Myconid Colony (Burg)',
+                items: [
+                    'Buy Boots of Genial Striding',
+                    'Buy Circlet of Blasting',
+                    'Buy The Baneful',
+                    'Buy Cinder Shoes',
+                    'Buy Melf\'s First Staff',
+                    'Buy Psychic Spark',
+                    'Buy Sunwalker\'s Gift',
+                    'Buy The Lifebringer'
+                ]
+            },
+            {
+                id: 'myconid-omeluum',
+                title: 'Underdark - Myconid Colony (Omeluum)',
+                items: [
+                    'Get Creation\'s Echo',
+                    'Get Ring of Mind-Shielding',
+                    'Get Boots of Stormy Clamour',
+                    'Get Pearl of Power Amulet',
+                    'Get Ring of Salving',
+                    'Get The Shadespell Circlet'
+                ]
+            },
+            {
+                id: 'myconid-derryth',
+                title: 'Underdark - Myconid Colony (Derryth Bonecloak)',
+                items: [
+                    'Buy Amulet of Restoration',
+                    'Buy Corrosive Flail',
+                    'Buy Caustic Band',
+                    'Buy [Gloves of Hail of Thorns](https://bg3.wiki/wiki/Gloves_of_Hail_of_Thorns)',
+                    'Buy Gloves of Uninhibited Kushigo',
+                    'Buy Herbalist\'s Gloves',
+                    'Buy Ring of Jumping'
+                ]
+            },
+            {
+                id: 'myconid-quests',
+                title: 'Underdark - Myconid Colony Quests',
+                items: [
+                    'Gain access to Ebonlake Grotto',
+                    'Complete [Defeat the Duergar Intruders](https://bg3.wiki/wiki/Defeat_the_Duergar_Intruders) (unlock vault: Icy Metal, Shadow of Menzoberranzan, start Adamantine Forge)',
+                    'Cure Thulla (get Boots of Speed)',
+                    'Complete [Help Omeluum Investigate the Parasite](https://bg3.wiki/wiki/Help_Omeluum_Investigate_the_Parasite)',
+                    'Complete [Find the Mushroom Picker](https://bg3.wiki/wiki/Find_the_Mushroom_Picker) (get Gloves of Uninhibited Kushigo)',
+                    'Deliver Nere\'s Head (get Envoy\'s Amulet OR Champion\'s Chain)',
+                    'Complete Avenge Glut\'s Circle (side with Glut: Winter\'s Clutches OR Spaw: loot Glut)'
+                ]
+            },
+            {
+                id: 'decrepit-village',
+                title: 'Underdark - Decrepit Village',
+                items: [
+                    'Handle Duergar Ambush (kill for Exterminator\'s Axe)',
+                    'Get Shortsword of First Blood (executed Deep Gnome)'
+                ]
+            },
+            {
+                id: 'arcane-tower',
+                title: 'Underdark - Arcane Tower',
+                items: [
+                    'Deal with Arcane Turrets',
+                    'Get Skybreaker',
+                    'Loot Chest of the Mundane',
+                    'Get Mystra\'s Grace',
+                    'Read/Interact: Orpheus Part One: Betrayal (githyanki slate)',
+                    'Get Mage\'s Friend',
+                    'Get Uncovered Mysteries',
+                    'Deal with Bernard (peaceful or fight - get Light of Creation, Guiding Light)',
+                    'Get Club of Hill Giant Strength (break stool at top)',
+                    'Get Staff of Arcane Blessing',
+                    'Get The Sparkswall'
+                ]
+            },
+            {
+                id: 'festering-cove',
+                title: 'Underdark - The Festering Cove',
+                items: [
+                    'Handle Festering Cove encounter',
+                    'Get Sickle of BOOOAL',
+                    'Get Slippery Chain Shirt'
+                ]
+            },
+            {
+                id: 'grymforge-greymon',
+                title: 'Underdark - Grymforge (Greymon Vendor)',
+                items: [
+                    'Buy Jorgoral\'s Greatsword',
+                    'Buy Bow of the Banshee',
+                    'Buy Shining Staver-of-Skulls'
+                ]
+            },
+            {
+                id: 'grymforge-main',
+                title: 'Underdark - Grymforge Main',
+                items: [
+                    'Get Intransigent Warhammer (before arriving)',
+                    'Complete Return the Sergeant\'s Boots (get Bracing Band OR Armour of Uninhibited Kushigo)',
+                    'Get The Protecty Sparkswall',
+                    'Defeat Mimics',
+                    'Get Wondrous Gloves',
+                    'Get The Real Sparky Sparkswall',
+                    'Handle The Bullied Gnome (Skickpit)',
+                    'Get Fetish of Callarduran Smoothhands',
+                    'Speak with Philomeen about Runepowder',
+                    'Decide fate of True Soul Nere (kill for: Disintegrating Night Walkers, Sword of Screams, Ring of Absolute Force, Cap of Wrath, Deep Delver, Boots of Speed)'
+                ]
+            },
+            {
+                id: 'adamantine-forge',
+                title: 'Underdark - Adamantine Forge',
+                items: [
+                    'Get Infernal Alloy (speak with Stonemason Kith)',
+                    'Get Dark Justiciar Mail',
+                    'Get Dark Justiciar Helm',
+                    'Get Dark Justiciar Mask',
+                    'Complete Get Past the Rubble (optional)',
+                    'Get Idol of Shar (gift to [Shadowheart](https://bg3.wiki/wiki/Shadowheart))',
+                    'Get Longsword Mould',
+                    'Get Shield Mould',
+                    'Get Scimitar Mould',
+                    'Get Splint Mould',
+                    'Get Scale Mail Mould',
+                    'Get Mace Mould',
+                    'Complete [The Adamantine Forge](https://bg3.wiki/wiki/The_Adamantine_Forge) quest',
+                    '⏰|Can only forge 2 items total|Forge 2 Adamantine items',
+                    'Defeat Grym',
+                    'Craft Mourning Frost (combine: Icy Helve, Icy Crystal, Icy Metal)'
+                ]
+            },
+            {
+                id: 'rosymorn-monastery',
+                title: 'Rosymorn Monastery',
+                items: [
+                    'Explore Rosymorn Monastery',
+                    'Find the Githyanki Crèche',
+                    'Complete [Find the Blood of Lathander](https://bg3.wiki/wiki/Find_the_Blood_of_Lathander)',
+                    'Get Blood of Lathander mace',
+                    'Get Dawnmaster\'s Crest',
+                    'Solve ceremonial weapon puzzle',
+                    'Meet with the Inquisitor',
+                    '⏰|Point of no return - affects Lae\'zel relationship|Deal with Vlaakith\'s demand',
+                    'Complete the Githyanki questline'
+                ]
+            },
+            {
+                id: 'companion-quests',
+                title: 'Companion Personal Quests',
+                items: [
+                    '[Shadowheart](https://bg3.wiki/wiki/Shadowheart): Explore past at Owlbear cave',
+                    '[Shadowheart](https://bg3.wiki/wiki/Shadowheart): Night Orchid conversation',
+                    '[Astarion](https://bg3.wiki/wiki/Astarion): Investigate the Gur hunter',
+                    '⏰|CRITICAL: Must feed 3 times before Act 2|[Gale](https://bg3.wiki/wiki/Gale): Feed [Gale](https://bg3.wiki/wiki/Gale) magical items (3 times total) - Required before leaving Act 1',
+                    '⏰|[Karlach](https://bg3.wiki/wiki/Karlach) auto-aggros if not resolved|Wyll: Hunt [Karlach](https://bg3.wiki/wiki/Karlach) (resolve peacefully)',
+                    'Lae\'zel: Find Githyanki Crèche',
+                    '⏰|Dammon leaves Grove after resolution|[Karlach](https://bg3.wiki/wiki/Karlach): Dammon first heart upgrade (requires [Infernal Iron](https://bg3.wiki/wiki/Infernal_Iron))',
+                    '⏰|Get all Infernal Iron before Act 2|Find all [Infernal Iron](https://bg3.wiki/wiki/Infernal_Iron) locations (Blighted Village, Zhentarim, Grymforge)',
+                    'All companions: Reach approval for romance'
+                ]
+            },
+            {
+                id: 'act1-finale',
+                title: 'Act 1 Finale',
+                items: [
+                    '⏰|Triggers Act 1 ending|Complete Goblin Camp OR Druid Grove questline',
+                    '⏰|Only after resolving Grove/Camp|Attend celebration at camp',
+                    'Resolve all companion conversations',
+                    'Long rest for dream sequences',
+                    'Prepare for journey to Act 2',
+                    'Visit Withers for respec if desired',
+                    'Complete remaining side quests',
+                    '⏰|Point of no return for Act 1|Head to Moonrise Towers (via Underdark or Mountain Pass)'
+                ]
+            }
+        ];
+
+        // Act 2 - Critical/Missable Items (Full content coming soon)
+        const act2Data = [
+            {
+                id: "ruined-battlefield",
+                title: "Shadow-Cursed Lands - Ruined Battlefield",
+                items: [
+                    "⏰|Need Moonlantern OR blessing to explore safely|Obtain [Moonlantern](https://bg3.wiki/wiki/Moonlantern) (from Kar'niss, Last Light Inn Harpers, or Balthazar's Room)",
+                    "⏰|Can only defeat once - choose Harper ambush OR betray escort|Defeat [Kar'niss](https://bg3.wiki/wiki/Kar%27niss) (loot: [Moonlantern](https://bg3.wiki/wiki/Moonlantern), [Cruel Sting](https://bg3.wiki/wiki/Cruel_Sting))",
+                    "Play Hide and Seek with Oliver (win peacefully for [Ring of Shadows](https://bg3.wiki/wiki/Ring_of_Shadows))",
+                    "Get [Ring of Mental Inhibition](https://bg3.wiki/wiki/Ring_of_Mental_Inhibition)",
+                    "Defeat Shadows (Lv. 5)",
+                    "Defeat Shadow-Cursed Ravens (Lv. 1)",
+                    "Defeat Shadow-Cursed Blights (Lv. 3-6)",
+                    "Complete [Punish the Wicked](https://bg3.wiki/wiki/Punish_the_Wicked) (reward: [Raven Gloves](https://bg3.wiki/wiki/Raven_Gloves))",
+                    "Get [Family Ring](https://bg3.wiki/wiki/Family_Ring)",
+                    "Defeat Shadow-Cursed Blights (Lv. 3-9) - get [Ironwood Club](https://bg3.wiki/wiki/Ironwood_Club), [Ring of Self Immolation](https://bg3.wiki/wiki/Ring_of_Self_Immolation)",
+                    "Defeat Shadow Mastiffs (destroy arcane torches) - get [Shadow-Cloaked Ring](https://bg3.wiki/wiki/Shadow-Cloaked_Ring)",
+                    "Defeat Meazels (Lv. 6)",
+                    "Get [Luminous Gloves](https://bg3.wiki/wiki/Luminous_Gloves)",
+                    "Get [Hammergrim Mist Amulet](https://bg3.wiki/wiki/Hammergrim_Mist_Amulet)",
+                    "Get [Ring of Twilight](https://bg3.wiki/wiki/Ring_of_Twilight)",
+                    "Deal With Absolutists - get [Thermoarcanic Gloves](https://bg3.wiki/wiki/Thermoarcanic_Gloves) from Kansif",
+                    "Defeat Vine Blights (Lv. 3-6)",
+                    "Get [Frost Prince](https://bg3.wiki/wiki/Frost_Prince)",
+                    "⏰|Only after speaking with Isobel, don't fast travel/long rest|Help Rolan defeat Shadows (Lv. 7)",
+                    "Get [Gloomstrand Shield](https://bg3.wiki/wiki/Gloomstrand_Shield)",
+                    "Get [Night Orchid](https://bg3.wiki/wiki/Night_Orchid) x3 (give to Shadowheart for approval)"
+                ]
+            },
+            {
+                id: "last-light-inn-main",
+                title: "Last Light Inn - Main Area",
+                items: [
+                    "Get [Penumbral Armour](https://bg3.wiki/wiki/Penumbral_Armour)",
+                    "⏰|Only if you didn't summon Kar'niss|Help Harpers With Their Plan (acquire Moonlantern)",
+                    "⏰|Needed for Karlach upgrades|Bring [Infernal Iron](https://bg3.wiki/wiki/Infernal_Iron) to Dammon",
+                    "⏰|Can craft armor set|Give Dammon Infernal Alloy or leftover Iron ([Flawed Helldusk Armour](https://bg3.wiki/wiki/Flawed_Helldusk_Armour), Gloves, Helmet)",
+                    "⏰|DO NOT KILL for Act 3 reward|Speak with [Strange Ox](https://bg3.wiki/wiki/Strange_Ox)",
+                    "Get [Shapeshifter's Boon Ring](https://bg3.wiki/wiki/Shapeshifter%27s_Boon_Ring) + [Hat of Fire Acuity](https://bg3.wiki/wiki/Hat_of_Fire_Acuity) (if killing Strange Ox)",
+                    "Get [Shield of Scorching Reprisal](https://bg3.wiki/wiki/Shield_of_Scorching_Reprisal)",
+                    "Get [Rippling Force Mail](https://bg3.wiki/wiki/Rippling_Force_Mail)",
+                    "Wake Up Art Cullagh",
+                    "Get [Snowburst Ring](https://bg3.wiki/wiki/Snowburst_Ring) (under loose plank)",
+                    "⏰|Only if tieflings saved in Act 1|Start [Rescue the Tieflings](https://bg3.wiki/wiki/Rescue_the_Tieflings)",
+                    "⏰|Dark Urge CANNOT obtain|Get [Potent Robe](https://bg3.wiki/wiki/Potent_Robe) (reward - NOT for Dark Urge)",
+                    "Get Tower-Shaped Key (unlocks Mason's Guild basement)",
+                    "⏰|Major choice - inn survival depends on this|Explore and trade before talking to Isobel",
+                    "⏰|CRITICAL - defend her or inn falls|Speak with [Isobel](https://bg3.wiki/wiki/Isobel) (defend from Marcus attack)",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (Fist Marcus)",
+                    "Get [Moon Devotion Robe](https://bg3.wiki/wiki/Moon_Devotion_Robe) (requires killing Isobel)",
+                    "Get [Jhannyl's Gloves](https://bg3.wiki/wiki/Jhannyl%27s_Gloves) (requires killing Isobel)",
+                    "Get [Sylvan Scimitar](https://bg3.wiki/wiki/Sylvan_Scimitar)",
+                    "Get [Shifting Corpus Ring](https://bg3.wiki/wiki/Shifting_Corpus_Ring)",
+                    "⏰|Must save before fast travel/long rest|Find Rolan (rescue from shadows)",
+                    "Start [Lift the Shadow-Curse](https://bg3.wiki/wiki/Lift_the_Shadow-Curse) (requires Halsin from Act 1)"
+                ]
+            },
+            {
+                id: "dammon-vendor",
+                title: "Last Light Inn - Dammon (Vendor)",
+                items: [
+                    "⏰|Vendor leaves if inn falls|Buy [Charge-Bound Warhammer](https://bg3.wiki/wiki/Charge-Bound_Warhammer)",
+                    "⏰|Vendor leaves if inn falls|Buy [Darkfire Shortbow](https://bg3.wiki/wiki/Darkfire_Shortbow)",
+                    "⏰|Vendor leaves if inn falls|Buy [Harmonium Halberd](https://bg3.wiki/wiki/Harmonium_Halberd)",
+                    "⏰|Vendor leaves if inn falls|Buy [Sword of Clutching Umbra](https://bg3.wiki/wiki/Sword_of_Clutching_Umbra)",
+                    "⏰|Vendor leaves if inn falls|Buy [Sword of Life Stealing](https://bg3.wiki/wiki/Sword_of_Life_Stealing)",
+                    "⏰|Vendor leaves if inn falls|Buy [Swordmaster Gloves](https://bg3.wiki/wiki/Swordmaster_Gloves)",
+                    "⏰|Vendor leaves if inn falls|Buy [Thermodynamo Axe](https://bg3.wiki/wiki/Thermodynamo_Axe)",
+                    "⏰|Vendor leaves if inn falls|Buy [Thorn Blade](https://bg3.wiki/wiki/Thorn_Blade)",
+                    "⏰|Requires Infernal Iron or Alloy per item|Craft [Flawed Helldusk Gloves](https://bg3.wiki/wiki/Flawed_Helldusk_Gloves)",
+                    "⏰|Requires Infernal Iron or Alloy per item|Craft [Flawed Helldusk Helmet](https://bg3.wiki/wiki/Flawed_Helldusk_Helmet)",
+                    "⏰|Requires Infernal Iron or Alloy per item|Craft [Flawed Helldusk Armour](https://bg3.wiki/wiki/Flawed_Helldusk_Armour)"
+                ]
+            },
+            {
+                id: "quartermaster-talli",
+                title: "Last Light Inn - Quartermaster Talli (Vendor)",
+                items: [
+                    "Buy [Shield of Devotion](https://bg3.wiki/wiki/Shield_of_Devotion)",
+                    "Buy [Incandescent Staff](https://bg3.wiki/wiki/Incandescent_Staff)",
+                    "Buy [Barkskin Armour](https://bg3.wiki/wiki/Barkskin_Armour)",
+                    "Buy [Shadeclinger Armour](https://bg3.wiki/wiki/Shadeclinger_Armour)",
+                    "Buy [Hat of Uninhibited Kushigo](https://bg3.wiki/wiki/Hat_of_Uninhibited_Kushigo)",
+                    "Buy [Obsidian Laced Robe](https://bg3.wiki/wiki/Obsidian_Laced_Robe)",
+                    "Buy [Amulet of the Harpers](https://bg3.wiki/wiki/Amulet_of_the_Harpers)",
+                    "Buy [Cindersnap Gloves](https://bg3.wiki/wiki/Cindersnap_Gloves)",
+                    "Buy [Gloves of the Balanced Hands](https://bg3.wiki/wiki/Gloves_of_the_Balanced_Hands)",
+                    "Buy [The Mighty Cloth](https://bg3.wiki/wiki/The_Mighty_Cloth)",
+                    "Buy [Yuan-ti Scale Mail](https://bg3.wiki/wiki/Yuan-ti_Scale_Mail) (best medium armor Act 2)",
+                    "Buy [Defender Greataxe](https://bg3.wiki/wiki/Defender_Greataxe)",
+                    "Buy [Cloak of Protection](https://bg3.wiki/wiki/Cloak_of_Protection)"
+                ]
+            },
+            {
+                id: "mattis-vendor",
+                title: "Last Light Inn - Mattis (Vendor)",
+                items: [
+                    "Buy [Evasive Shoes](https://bg3.wiki/wiki/Evasive_Shoes)",
+                    "Buy [Cloak of Cunning Brume](https://bg3.wiki/wiki/Cloak_of_Cunning_Brume)"
+                ]
+            },
+            {
+                id: "barcus-vendor",
+                title: "Last Light Inn - Barcus Wroot (Vendor)",
+                items: [
+                    "Buy [Acrobat Shoes](https://bg3.wiki/wiki/Acrobat_Shoes)",
+                    "Buy [Gloves of the Automaton](https://bg3.wiki/wiki/Gloves_of_the_Automaton)",
+                    "Buy [Ring of Geniality](https://bg3.wiki/wiki/Ring_of_Geniality)"
+                ]
+            },
+            {
+                id: "last-light-cellar",
+                title: "Last Light Inn - Cellar",
+                items: [
+                    "Defeat Meenlocks (Lv. 6) x7",
+                    "Get [Coruscation Ring](https://bg3.wiki/wiki/Coruscation_Ring)",
+                    "Get [Covert Cowl](https://bg3.wiki/wiki/Covert_Cowl)"
+                ]
+            },
+            {
+                id: "reithwin-tollhouse",
+                title: "Reithwin Town - Tollhouse",
+                items: [
+                    "Deal with Gerringothe Thorm (Lv. 8) - get [Twist of Fortune](https://bg3.wiki/wiki/Twist_of_Fortune)",
+                    "Get [Ironvine Shield](https://bg3.wiki/wiki/Ironvine_Shield)",
+                    "Get [Gloves of Battlemage's Power](https://bg3.wiki/wiki/Gloves_of_Battlemage%27s_Power)",
+                    "Get [Fireheart](https://bg3.wiki/wiki/Fireheart)",
+                    "Get [Soul Coin](https://bg3.wiki/wiki/Soul_Coin) (Tollhouse basement)"
+                ]
+            },
+            {
+                id: "masons-guild",
+                title: "Reithwin Town - Mason's Guild",
+                items: [
+                    "Get [Infernal Iron](https://bg3.wiki/wiki/Infernal_Iron)",
+                    "⏰|Requires Tower-Shaped Key from Last Light|Gain access to basement (use Tower-Shaped Key on Keyholed Herald)",
+                    "Defeat Wraith and Shadows (Lv. 5-7)",
+                    "Get [Helmet of Arcane Acuity](https://bg3.wiki/wiki/Helmet_of_Arcane_Acuity) (one of best items for gish builds)"
+                ]
+            },
+            {
+                id: "reithwin-graveyard",
+                title: "Reithwin Town - Graveyard",
+                items: [
+                    "Find Arabella's Parents",
+                    "Get [Boots of Apparent Death](https://bg3.wiki/wiki/Boots_of_Apparent_Death)",
+                    "Get [Icebite Robe](https://bg3.wiki/wiki/Icebite_Robe)",
+                    "Get [True Love's Caress](https://bg3.wiki/wiki/True_Love%27s_Caress)",
+                    "⏰|Finish Reithwin and Moonrise first|Avoid entering Thorm Mausoleum until ready"
+                ]
+            },
+            {
+                id: "house-of-healing",
+                title: "Reithwin Town - House of Healing",
+                items: [
+                    "Speak with Sister Lidwin (trader, knows about Arabella's parents)",
+                    "Speak with Sister Sinda",
+                    "Deal with Malus Thorm - get [Surgeon's Subjugation Amulet](https://bg3.wiki/wiki/Surgeon%27s_Subjugation_Amulet)",
+                    "Get [Assassin's Shortsword](https://bg3.wiki/wiki/Assassin%27s_Shortsword)",
+                    "Get [Watcher's Shield](https://bg3.wiki/wiki/Watcher%27s_Shield)",
+                    "Get [Shar's Temptation](https://bg3.wiki/wiki/Shar%27s_Temptation)",
+                    "Get [True Love's Embrace](https://bg3.wiki/wiki/True_Love%27s_Embrace)",
+                    "Get [Poisoner's Gloves](https://bg3.wiki/wiki/Poisoner%27s_Gloves)",
+                    "Get [Shadow Blade Ring](https://bg3.wiki/wiki/Shadow_Blade_Ring)"
+                ]
+            },
+            {
+                id: "house-of-healing-morgue",
+                title: "House of Healing - Morgue",
+                items: [
+                    "Defeat Shadow-Cursed Beings",
+                    "Gain access to hidden room",
+                    "Get [Firzu's Ring of Trading](https://bg3.wiki/wiki/Firzu%27s_Ring_of_Trading)",
+                    "Get [Strange Tendril Amulet](https://bg3.wiki/wiki/Strange_Tendril_Amulet)",
+                    "Defeat Zombies (Lv. 6)",
+                    "Get [Bided Time](https://bg3.wiki/wiki/Bided_Time)",
+                    "Get [Eversight Ring](https://bg3.wiki/wiki/Eversight_Ring)",
+                    "Acquire key to Necrotic Laboratory",
+                    "⏰|DC 30 lockpick OR use secret lever|Gain access to Ominous Crevice",
+                    "Defeat Hollow Armour and Fetid Ooze - get [Protective Plate](https://bg3.wiki/wiki/Protective_Plate)",
+                    "Get [Fleshmelter Cloak](https://bg3.wiki/wiki/Fleshmelter_Cloak)"
+                ]
+            },
+            {
+                id: "sharran-sanctuary",
+                title: "Reithwin Town - Sharran Sanctuary",
+                items: [
+                    "Defeat Shadow-Cursed Harpers",
+                    "Complete the Dark Lady's Ritual",
+                    "Get [Ritual Dagger of Shar](https://bg3.wiki/wiki/Ritual_Dagger_of_Shar)"
+                ]
+            },
+            {
+                id: "reithwin-main",
+                title: "Reithwin Town - Main Area",
+                items: [
+                    "⏰|Only if marked for death by Vlaakith|Defeat Githyanki Ambush (Lv. 9) - get [Hr'a'cknir Bracers](https://bg3.wiki/wiki/Hr%27a%27cknir_Bracers), [Psionic Ward Armour](https://bg3.wiki/wiki/Psionic_Ward_Armour)"
+                ]
+            },
+            {
+                id: "waning-moon",
+                title: "The Waning Moon (Tavern)",
+                items: [
+                    "Deal with Thisobald Thorm (don't drink too much)",
+                    "Get [Rat Bat](https://bg3.wiki/wiki/Rat_Bat)",
+                    "Get Madeline's Ledger (for Punish the Wicked quest)",
+                    "Get [Ichorous Gloves](https://bg3.wiki/wiki/Ichorous_Gloves)",
+                    "Get [Punch-Drunk Bastard](https://bg3.wiki/wiki/Punch-Drunk_Bastard)",
+                    "Read Research Notes (DC 14 Investigation for [Thisobald's Brewed-Up Bellyglummer](https://bg3.wiki/wiki/Thisobald%27s_Brewed-Up_Bellyglummer) recipe)"
+                ]
+            },
+            {
+                id: "moonrise-towers-main",
+                title: "Moonrise Towers - Main Area",
+                items: [
+                    "Get 2x [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (docks in crates)",
+                    "Enter Moonrise Towers",
+                    "⏰|Karlach must be present|Get 3x [Soul Coin](https://bg3.wiki/wiki/Soul_Coin) from Lann Tarv (listen to all stories)",
+                    "Speak with Ketheric Thorm",
+                    "Speak with [Araj Oblodra](https://bg3.wiki/wiki/Araj_Oblodra) (blood donation, Astarion interaction, [Potion of Everlasting Vigour](https://bg3.wiki/wiki/Potion_of_Everlasting_Vigour))",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) from Linsella (kill or release knolls)",
+                    "Talk with Z'rell (access to Lann Tarv stash and Balthazar's Room)",
+                    "Get Orpheus Part 3 book (talk with Lae'zel)",
+                    "Get [Derivation Cloak](https://bg3.wiki/wiki/Derivation_Cloak)",
+                    "Get [Coldbrim Hat](https://bg3.wiki/wiki/Coldbrim_Hat)",
+                    "Read Necromancer's Research Notes",
+                    "Get [Shadow Lantern](https://bg3.wiki/wiki/Shadow_Lantern) (craft in Balthazar's Secret Room)",
+                    "Talk to Squire",
+                    "Get [Cloak of Elemental Absorption](https://bg3.wiki/wiki/Cloak_of_Elemental_Absorption)",
+                    "Search Ketheric Thorm's Daughter's Room",
+                    "Get [Spineshudder Amulet](https://bg3.wiki/wiki/Spineshudder_Amulet)",
+                    "Get [Argument Solver](https://bg3.wiki/wiki/Argument_Solver)",
+                    "Get [Very Heavy Greataxe](https://bg3.wiki/wiki/Very_Heavy_Greataxe) (if not obtained Act 1)",
+                    "⏰|Do NOT go to rooftop yet|Avoid Moonrise Towers Rooftop (impossible encounter before completing other areas)"
+                ]
+            },
+            {
+                id: "lann-tarv-vendor",
+                title: "Moonrise Towers - Lann Tarv (Vendor)",
+                items: [
+                    "Buy [Halberd of Vigilance](https://bg3.wiki/wiki/Halberd_of_Vigilance)",
+                    "Buy [Enraging Heart Garb](https://bg3.wiki/wiki/Enraging_Heart_Garb)",
+                    "Buy [Gloves of The Duellist](https://bg3.wiki/wiki/Gloves_of_The_Duellist)",
+                    "Buy [Sentinel Shield](https://bg3.wiki/wiki/Sentinel_Shield)",
+                    "Buy [Fistbreaker Helm](https://bg3.wiki/wiki/Fistbreaker_Helm)",
+                    "Buy [Bigboy's Chew Toy](https://bg3.wiki/wiki/Bigboy%27s_Chew_Toy)",
+                    "Buy [Slicing Shortsword](https://bg3.wiki/wiki/Slicing_Shortsword)",
+                    "Buy [Gauntlets of Surging Accuracy](https://bg3.wiki/wiki/Gauntlets_of_Surging_Accuracy)",
+                    "Buy [Dwarven Splintmail](https://bg3.wiki/wiki/Dwarven_Splintmail) (best heavy armor Act 2)",
+                    "Buy [Render of Mind and Body](https://bg3.wiki/wiki/Render_of_Mind_and_Body)",
+                    "Buy [Titanstring Bow](https://bg3.wiki/wiki/Titanstring_Bow) (if not obtained Act 1)"
+                ]
+            },
+            {
+                id: "roah-vendor",
+                title: "Moonrise Towers - Roah Moonglow (Vendor)",
+                items: [
+                    "Buy [Armour of Devotion](https://bg3.wiki/wiki/Armour_of_Devotion)",
+                    "Buy [Drakethroat Glaive](https://bg3.wiki/wiki/Drakethroat_Glaive)",
+                    "Buy [Gloves of Crushing](https://bg3.wiki/wiki/Gloves_of_Crushing)",
+                    "Buy [Sharpened Snare Cuirass](https://bg3.wiki/wiki/Sharpened_Snare_Cuirass)",
+                    "Buy [Ne'er Misser](https://bg3.wiki/wiki/Ne%27er_Misser)",
+                    "Buy [Poisoner's Ring](https://bg3.wiki/wiki/Poisoner%27s_Ring)",
+                    "Buy [Ring of Spiteful Thunder](https://bg3.wiki/wiki/Ring_of_Spiteful_Thunder)",
+                    "Buy [Marksmanship Hat](https://bg3.wiki/wiki/Marksmanship_Hat)"
+                ]
+            },
+            {
+                id: "araj-vendor",
+                title: "Moonrise Towers - Araj Oblodra (Vendor)",
+                items: [
+                    "Buy [Boots of Arcane Bolstering](https://bg3.wiki/wiki/Boots_of_Arcane_Bolstering)",
+                    "Buy [Risky Ring](https://bg3.wiki/wiki/Risky_Ring) (one of best rings in game)",
+                    "Buy [Circlet of Hunting](https://bg3.wiki/wiki/Circlet_of_Hunting)",
+                    "Buy [Ring of Free Action](https://bg3.wiki/wiki/Ring_of_Free_Action)",
+                    "Buy [Robe of Exquisite Focus](https://bg3.wiki/wiki/Robe_of_Exquisite_Focus)",
+                    "Buy [Thunderskin Cloak](https://bg3.wiki/wiki/Thunderskin_Cloak)",
+                    "Buy [Hat of Storm Scion's Power](https://bg3.wiki/wiki/Hat_of_Storm_Scion%27s_Power)"
+                ]
+            },
+            {
+                id: "moonrise-prison",
+                title: "Moonrise Towers - Prison",
+                items: [
+                    "⏰|Must survive Act 1 encounter|Recruit [Minthara](https://bg3.wiki/wiki/Minthara)",
+                    "⏰|Only if tieflings/gnomes survived Act 1|Rescue Wulbren and prisoners",
+                    "Defeat the Warden - get [Spellcrux Amulet](https://bg3.wiki/wiki/Spellcrux_Amulet)",
+                    "Get [Wulbren's Hammer](https://bg3.wiki/wiki/Wulbren%27s_Hammer)",
+                    "Get [Browbeaten Circlet](https://bg3.wiki/wiki/Browbeaten_Circlet)",
+                    "⏰|After exploring Moonrise and Reithwin|Continue to Grand Mausoleum"
+                ]
+            },
+            {
+                id: "grand-mausoleum",
+                title: "Grand Mausoleum",
+                items: [
+                    "Speak with Raphael (starts [Kill Raphael's Old Enemy](https://bg3.wiki/wiki/Kill_Raphael%27s_Old_Enemy))",
+                    "Defeat Cursed Kuo-Toa (Lv. 6-7) - Chief drops [Lightning Jabber](https://bg3.wiki/wiki/Lightning_Jabber)",
+                    "Get [Vivacious Cloak](https://bg3.wiki/wiki/Vivacious_Cloak)",
+                    "Solve the puzzle (enter Gauntlet of Shar)"
+                ]
+            },
+            {
+                id: "gauntlet-of-shar",
+                title: "Gauntlet of Shar",
+                items: [
+                    "Enter Gauntlet of Shar",
+                    "⏰|Cave entrance OR solve stone door puzzle|Gain further access",
+                    "Defeat encounter (Lv. 7)",
+                    "Get [Least Expected](https://bg3.wiki/wiki/Least_Expected)",
+                    "Defeat Cloaker (Lv. 8)",
+                    "Defeat encounter (Lv. 7)",
+                    "Get [Callous Glow Ring](https://bg3.wiki/wiki/Callous_Glow_Ring)",
+                    "⏰|Ally with OR kill Balthazar|Deal with Balthazar",
+                    "Get [Circle of Bones](https://bg3.wiki/wiki/Circle_of_Bones) (if killing Balthazar)",
+                    "Get [Summon Golem Bell](https://bg3.wiki/wiki/Summon_Golem_Bell) (if allying with Balthazar - only works in Gauntlet)",
+                    "⏰|Astarion leaves if you side with Yurgir|Deal with Yurgir (Raphael's quest OR help Yurgir)",
+                    "Get [Hellfire Hand Crossbow](https://bg3.wiki/wiki/Hellfire_Hand_Crossbow) (if killing Yurgir)",
+                    "Get [Boots of Brilliance](https://bg3.wiki/wiki/Boots_of_Brilliance)",
+                    "Get [Dark Justiciar Gauntlets](https://bg3.wiki/wiki/Dark_Justiciar_Gauntlets)",
+                    "⏰|Don't forget to take Umbral Gem|Take Umbral Gem from Yurgir's area",
+                    "Find Last Justiciar (read One Becomes Many)",
+                    "Get [Justiciar's Scimitar](https://bg3.wiki/wiki/Justiciar%27s_Scimitar)",
+                    "Get [Justiciar's Greatshield](https://bg3.wiki/wiki/Justiciar%27s_Greatshield)",
+                    "⏰|Shadowheart +5 approval for blood donation|Complete Soft-Step Trial (get Umbral Gem)",
+                    "⏰|Shadowheart +5 approval for blood donation|Complete Self-Same Trial (get Umbral Gem)",
+                    "Get [Killer's Sweetheart](https://bg3.wiki/wiki/Killer%27s_Sweetheart)",
+                    "⏰|Shadowheart +5 approval for blood donation|Complete Faith-Leap Trial (get Umbral Gem)",
+                    "⏰|DO NOT DESTROY THIS BOOK|Defeat Librarian & Dark Justiciars - get [Teachings of Loss: The Nightsinger](https://bg3.wiki/wiki/Teachings_of_Loss:_The_Nightsinger)",
+                    "Place book on pedestal (unlock secret room)",
+                    "Get [Spear of Night](https://bg3.wiki/wiki/Spear_of_Night)",
+                    "Get [Dark Justiciar Helmet](https://bg3.wiki/wiki/Dark_Justiciar_Helmet)",
+                    "Get [Dark Justiciar Half-Plate](https://bg3.wiki/wiki/Dark_Justiciar_Half-Plate)",
+                    "⏰|Need all 4 Umbral Gems|Proceed to Verge of Shadows (use Traversal Gem)"
+                ]
+            },
+            {
+                id: "shadowfell",
+                title: "Shadowfell",
+                items: [
+                    "Enter Shadowfell",
+                    "Get [Dark Justiciar Helm](https://bg3.wiki/wiki/Dark_Justiciar_Helm)",
+                    "⏰|MAJOR STORY CHOICE - permanently affects Shadowheart|Shadowheart's Path: Kill or Save Nightsong",
+                    "Get [Shar's Spear of Evening](https://bg3.wiki/wiki/Shar%27s_Spear_of_Evening) (if killing Nightsong - best 2H weapon)",
+                    "Get [Dark Justiciar Half-Plate](https://bg3.wiki/wiki/Dark_Justiciar_Half-Plate) (if killing Nightsong)",
+                    "Get [Dark Justiciar Gauntlets](https://bg3.wiki/wiki/Dark_Justiciar_Gauntlets) (if killing Nightsong)",
+                    "Get [Dark Justiciar Boots](https://bg3.wiki/wiki/Dark_Justiciar_Boots) (if killing Nightsong)",
+                    "Get [Moonlight Glaive](https://bg3.wiki/wiki/Moonlight_Glaive) (if sparing Nightsong)",
+                    "Get [Selûne's Spear of Night](https://bg3.wiki/wiki/Sel%C3%BBne%27s_Spear_of_Night) later in Act 2 (if sparing Nightsong)",
+                    "Deal with Balthazar",
+                    "Decide fate of Nightsong (affects entire Act 2 ending)"
+                ]
+            },
+            {
+                id: "siege-moonrise",
+                title: "Siege of Moonrise Towers",
+                items: [
+                    "⏰|Depends on your choices|Talk with Isobel (may trigger siege)",
+                    "Siege Moonrise Towers",
+                    "Get [Absolute's Protector](https://bg3.wiki/wiki/Absolute%27s_Protector)",
+                    "Clear the Prison",
+                    "Kill Radija - get [Myrkulite Scourge](https://bg3.wiki/wiki/Myrkulite_Scourge)",
+                    "Defeat Ketheric Thorm (first encounter)",
+                    "Get [Ring of Exalted Marrow](https://bg3.wiki/wiki/Ring_of_Exalted_Marrow) (heavy chest behind altar)"
+                ]
+            },
+            {
+                id: "mind-flayer-colony",
+                title: "Mind Flayer Colony",
+                items: [
+                    "Enter Mind Flayer Colony",
+                    "Defeat Hook Horrors (Lv. 4)",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (Zealot Krizt)",
+                    "⏰|Must survive Nautiloid|Free [Us](https://bg3.wiki/wiki/Us) (get Summon Us ability)",
+                    "Get Butchered Mind (use at Mind-Archive)",
+                    "Defeat Undead (Lv. 3-7)",
+                    "Get Willing Mind, True Mind (use at Mind-Archive)",
+                    "Use Mind-Archive Interface (insert brains from Nautiloid and Colony)",
+                    "Solve Mind Puzzle",
+                    "⏰|Permanent INT save advantage|Sacrifice Waking Mind at Mind-Archive",
+                    "Get [Blade of Oppressed Souls](https://bg3.wiki/wiki/Blade_of_Oppressed_Souls)",
+                    "Get [Braindrain Gloves](https://bg3.wiki/wiki/Braindrain_Gloves)",
+                    "Get [Circlet of Mental Anguish](https://bg3.wiki/wiki/Circlet_of_Mental_Anguish)",
+                    "Decide fate of Zevlor and others (release OR leave)",
+                    "⏰|Wyll must be in party|Decide fate of [Mizora](https://bg3.wiki/wiki/Mizora) (save for [Infernal Rapier](https://bg3.wiki/wiki/Infernal_Rapier))",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (illithid tadpole)",
+                    "Get Closed Mind, Fresh Mind (use at Mind-Archive)",
+                    "Defeat Mistress of Souls and Skull Lashers (Lv. 8) - Kressa drops [Myrkulite Scourge](https://bg3.wiki/wiki/Myrkulite_Scourge)",
+                    "⏰|Explore before fighting final boss|Explore Mind Flayer Colony before Apostle of Myrkul",
+                    "Defeat Apostle of Myrkul (Ketheric final form)",
+                    "Get [Ketheric's Shield](https://bg3.wiki/wiki/Ketheric%27s_Shield) (best shield for casters)",
+                    "Get [Ketheric's Warhammer](https://bg3.wiki/wiki/Ketheric%27s_Warhammer)",
+                    "Get [Reaper's Embrace](https://bg3.wiki/wiki/Reaper%27s_Embrace)"
+                ]
+            },
+            {
+                id: "act2-finale",
+                title: "Act 2 Finale",
+                items: [
+                    "Complete all companion quests in Act 2",
+                    "Long rest for companion conversations",
+                    "Resolve Shadowheart storyline aftermath",
+                    "⏰|Point of no return for Act 2|Prepare to enter Rivington/Wyrm's Crossing (Act 3)"
+                ]
+            }
+        ];
+        const act3Data = [
+            {
+                id: "astral-plane",
+                title: "Astral Plane",
+                items: [
+                    "⏰|Triggered when resting at Wyrm Lookout|Help Defend the Astral Plane (prepare party for encounter)",
+                    "⏰|Need 15+ STR to reach chasms|Get [Boots of Uninhibited Kushigo](https://bg3.wiki/wiki/Boots_of_Uninhibited_Kushigo) (best Monk boots)"
+                ]
+            },
+            {
+                id: "rivington-main",
+                title: "Rivington - Main Area",
+                items: [
+                    "Speak with Grub"
+                ]
+            },
+            {
+                id: "circus-last-days",
+                title: "Rivington - Circus of the Last Days",
+                items: [
+                    "Enter the Circus of the Last Days",
+                    "Speak with Zara the Mummy",
+                    "Evaluate the bond with your partner",
+                    "⏰|Don't steal Djinni Ring yet|Play The Lottery - win consolation prizes first",
+                    "Get [Unlucky Thief's Gloves](https://bg3.wiki/wiki/Unlucky_Thief%27s_Gloves)",
+                    "Get [Reverse Rain Cloak](https://bg3.wiki/wiki/Reverse_Rain_Cloak)",
+                    "Get [Boots of Very Fast Blinking](https://bg3.wiki/wiki/Boots_of_Very_Fast_Blinking)",
+                    "Get [Staff of a Mumbling Wizard](https://bg3.wiki/wiki/Staff_of_a_Mumbling_Wizard)",
+                    "Get [Comeback Handaxe](https://bg3.wiki/wiki/Comeback_Handaxe)",
+                    "⏰|After getting consolation prizes|Steal [Djinni Ring](https://bg3.wiki/wiki/Djinni_Ring) from Akabi",
+                    "⏰|Only after stealing ring|Win the Jackpot (teleported to Jungle)",
+                    "Get [Nyrulna](https://bg3.wiki/wiki/Nyrulna) (one of best throwing weapons)",
+                    "Get [Band of the Mystic Scoundrel](https://bg3.wiki/wiki/Band_of_the_Mystic_Scoundrel) (core spellsword item)",
+                    "Talk with Boney (statue for 5000 gold)",
+                    "Talk with Popper",
+                    "Talk with Dribbles the Clown",
+                    "Get [Clown Hammer](https://bg3.wiki/wiki/Clown_Hammer)",
+                    "Start Find Dribbles the Clown (collect 7 body parts)",
+                    "Get [Spellmight Gloves](https://bg3.wiki/wiki/Spellmight_Gloves) (reward for completing quest - excellent for attack roll spells)",
+                    "Get [The Pointy Hat](https://bg3.wiki/wiki/The_Pointy_Hat) (steal from locked chest)",
+                    "Get Clown's Severed Hand (from Popper)",
+                    "Get [Dark Displacement Gloves](https://bg3.wiki/wiki/Dark_Displacement_Gloves) (sold by Popper)",
+                    "Get [Hollow's Staff](https://bg3.wiki/wiki/Hollow%27s_Staff) (loot from Korilla)"
+                ]
+            },
+            {
+                id: "open-hand-temple",
+                title: "Rivington - Open Hand Temple",
+                items: [
+                    "Talk with Brothers Clements and Bill",
+                    "Talk with Sister Yannis",
+                    "Talk with Brother Donnick",
+                    "⏰|Bring Gale|Talk with Tresym Tara (get [Ring of Blink](https://bg3.wiki/wiki/Ring_of_Blink))",
+                    "Get [Ring of Blink](https://bg3.wiki/wiki/Ring_of_Blink)",
+                    "Get [Seraphic Pugilist Gloves](https://bg3.wiki/wiki/Seraphic_Pugilist_Gloves)",
+                    "Go to Open Hand Temple Cellar"
+                ]
+            },
+            {
+                id: "open-hand-cellar",
+                title: "Open Hand Temple - Cellar",
+                items: [
+                    "⏰|Choose reward carefully|Bring Sentient Amulet to Shirra Clarwen",
+                    "Get [Sentient Amulet](https://bg3.wiki/wiki/Sentient_Amulet) (improved if curse removed)",
+                    "Defeat Doppelgangers (Lv. 8)",
+                    "Get Clown's Severed Torso",
+                    "Get [Stillmaker](https://bg3.wiki/wiki/Stillmaker)"
+                ]
+            },
+            {
+                id: "rivington-general",
+                title: "Rivington - General Store",
+                items: [
+                    "Speak with Gyldo Angleiron the Smith"
+                ]
+            },
+            {
+                id: "exxvikyap-vendor",
+                title: "Rivington - Exxvikyap (Dragonborn Vendor)",
+                items: [
+                    "Buy [Ambusher](https://bg3.wiki/wiki/Ambusher)",
+                    "Buy [Bonespike Garb](https://bg3.wiki/wiki/Bonespike_Garb)",
+                    "Buy [Elven Chain](https://bg3.wiki/wiki/Elven_Chain)",
+                    "Buy [Stalker Gloves](https://bg3.wiki/wiki/Stalker_Gloves)",
+                    "Buy [Swires' Sledboard](https://bg3.wiki/wiki/Swires%27_Sledboard)",
+                    "Buy [The Dancing Breeze](https://bg3.wiki/wiki/The_Dancing_Breeze)"
+                ]
+            },
+            {
+                id: "refugee-camp",
+                title: "Rivington - Refugee Camp",
+                items: [
+                    "Speak with Biscotti",
+                    "⏰|DO NOT KILL for Act 3 reward|Speak with Strange Ox (final encounter)"
+                ]
+            },
+            {
+                id: "arfurs-house",
+                title: "Refugee Camp - Arfur's House",
+                items: [
+                    "Decide fate of the squatters",
+                    "Investigate the Suspicious Toys"
+                ]
+            },
+            {
+                id: "ferg-drogher-vendor",
+                title: "Refugee Camp - Ferg Drogher (Vendor)",
+                items: [
+                    "⏰|Avoid if Shadowheart abandoned Shar|Enter without Shadowheart for access",
+                    "Buy [Dwarven Thrower](https://bg3.wiki/wiki/Dwarven_Thrower) (best throwing weapon for Dwarves)",
+                    "Buy [Hellrider Longbow](https://bg3.wiki/wiki/Hellrider_Longbow) (excellent stat stick for initiative)",
+                    "Buy [Cold Snap](https://bg3.wiki/wiki/Cold_Snap)",
+                    "Buy [Nymph Cloak](https://bg3.wiki/wiki/Nymph_Cloak)",
+                    "Buy [Robe of Supreme Defences](https://bg3.wiki/wiki/Robe_of_Supreme_Defences)",
+                    "Buy [Sethan](https://bg3.wiki/wiki/Sethan)"
+                ]
+            },
+            {
+                id: "mattis-vendor-act3",
+                title: "Refugee Camp - Mattis (Vendor)",
+                items: [
+                    "Buy [Corvid Token](https://bg3.wiki/wiki/Corvid_Token)",
+                    "Buy [Scabby Pugilist Circlet](https://bg3.wiki/wiki/Scabby_Pugilist_Circlet)"
+                ]
+            },
+            {
+                id: "abandoned-windmill",
+                title: "Rivington - Abandoned Windmill",
+                items: [
+                    "Decide fate of newborn Mind Flayer",
+                    "Get [Ring of Truthfulness](https://bg3.wiki/wiki/Ring_of_Truthfulness)"
+                ]
+            },
+            {
+                id: "gur-camp",
+                title: "Rivington - Gur Camp",
+                items: [
+                    "Speak with Ulma about vampires",
+                    "Get [The Undead Bane](https://bg3.wiki/wiki/The_Undead_Bane)",
+                    "Get [Gandrel's Aspiration](https://bg3.wiki/wiki/Gandrel%27s_Aspiration) (if not obtained Act 1)"
+                ]
+            },
+            {
+                id: "western-beach",
+                title: "Rivington - Western Beach",
+                items: [
+                    "Get [Necklace of Elemental Augmentation](https://bg3.wiki/wiki/Necklace_of_Elemental_Augmentation) (excellent for Cold Sorcerer)",
+                    "Defeat the battling groups",
+                    "Get [Bonespike Boots](https://bg3.wiki/wiki/Bonespike_Boots)",
+                    "Get [Gleamdance Dagger](https://bg3.wiki/wiki/Gleamdance_Dagger)",
+                    "Get 2x [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen)",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen)",
+                    "Get [Corpsegrinder](https://bg3.wiki/wiki/Corpsegrinder)"
+                ]
+            },
+            {
+                id: "angleirons-cellar",
+                title: "Angleiron's Cellar",
+                items: [
+                    "Speak with Wulbren"
+                ]
+            },
+            {
+                id: "bumpnagel-vendor",
+                title: "Rivington - Bumpnagel (Vendor)",
+                items: [
+                    "Buy [Martial Exertion Gloves](https://bg3.wiki/wiki/Martial_Exertion_Gloves)",
+                    "Buy [Nimblefinger Gloves](https://bg3.wiki/wiki/Nimblefinger_Gloves)",
+                    "Buy [Thunderpalm Strikers](https://bg3.wiki/wiki/Thunderpalm_Strikers)"
+                ]
+            },
+            {
+                id: "sword-coast-couriers",
+                title: "Rivington - Sword Coast Couriers",
+                items: [
+                    "Find the Missing Letters",
+                    "Save the Abused Dogs"
+                ]
+            },
+            {
+                id: "wyrms-crossing-entrance",
+                title: "Wyrm's Crossing - Entrance",
+                items: [
+                    "Find a way inside Wyrm's Crossing",
+                    "Deal with the Gnomes"
+                ]
+            },
+            {
+                id: "carms-garm",
+                title: "Wyrm's Crossing - Carm's Garm",
+                items: [
+                    "Talk with Naaber until he has nothing else to say",
+                    "Get [Absolute Confidence Amulet](https://bg3.wiki/wiki/Absolute_Confidence_Amulet)",
+                    "Get [Seemingly Gleaming Ring](https://bg3.wiki/wiki/Seemingly_Gleaming_Ring)"
+                ]
+            },
+            {
+                id: "danthelons-dancing-axe",
+                title: "Wyrm's Crossing - Danthelon's Dancing Axe",
+                items: [
+                    "⏰|Jaheira must be with you or told about safehouse|Harpers Safehouse access"
+                ]
+            },
+            {
+                id: "entharl-danthelon-vendor",
+                title: "Danthelon's Dancing Axe - Entharl Danthelon (Vendor)",
+                items: [
+                    "Buy [Gauntlets of the Warmaster](https://bg3.wiki/wiki/Gauntlets_of_the_Warmaster)",
+                    "Buy [Cloak of Displacement](https://bg3.wiki/wiki/Cloak_of_Displacement) (one of best cloaks)",
+                    "Buy [Horns of the Berserker](https://bg3.wiki/wiki/Horns_of_the_Berserker)",
+                    "Buy [Snow-Dusted Monastery Gloves](https://bg3.wiki/wiki/Snow-Dusted_Monastery_Gloves)",
+                    "Buy [Garb of The Land and Sky](https://bg3.wiki/wiki/Garb_of_The_Land_and_Sky)",
+                    "Buy [Harmonic Dueller](https://bg3.wiki/wiki/Harmonic_Dueller) (excellent for dual-wielding spellswords)",
+                    "Buy [Blightbringer](https://bg3.wiki/wiki/Blightbringer)"
+                ]
+            },
+            {
+                id: "sharess-caress",
+                title: "Wyrm's Crossing - Sharess' Caress",
+                items: [
+                    "Speak with Mamzell Amira",
+                    "Find the 'Stern Librarian' Ffion",
+                    "Speak with Hoots Hooligan",
+                    "Get [Amulet of the Drunkard](https://bg3.wiki/wiki/Amulet_of_the_Drunkard)",
+                    "Speak with Sorn and Nym Orlith",
+                    "⏰|Only if sided with refugees|Talk with Arfur (get Admission Pass)",
+                    "Speak with Investigator Valeria",
+                    "Speak with Naoise Nallinto (top floor)",
+                    "Speak with Raphael (top floor)",
+                    "⏰|If Voss survived Act 1|Speak with Kith'rak Voss",
+                    "Get [Voss' Silver Sword](https://bg3.wiki/wiki/Voss%27_Silver_Sword)"
+                ]
+            },
+            {
+                id: "fraygos-flophouse",
+                title: "Wyrm's Crossing - Fraygo's Flophouse",
+                items: [
+                    "Talk with Drim and Rosanna",
+                    "⏰|No Daylight or Blood of Lathander equipped|Talk with Dalyria and Pale Petras",
+                    "⏰|Use Flowery Key or DC 25 lockpick|Find and investigate hidden room (third floor)"
+                ]
+            },
+            {
+                id: "wyrms-rock-fortress",
+                title: "Wyrm's Rock Fortress",
+                items: [
+                    "Enter Wyrm's Rock Fortress",
+                    "Convince Arkleia Oloril to sell her wares",
+                    "Get [Flame Enamelled Armour](https://bg3.wiki/wiki/Flame_Enamelled_Armour)",
+                    "Confront Fist Reynash",
+                    "⏰|Before going to Audience Hall|Speak with guests at first floor mess hall",
+                    "⏰|Don't fight yet - wait until after Steel Watch Foundry|Speak with Enver Gortash at Audience Hall",
+                    "⏰|After Steel Watch Foundry destroyed|Defeat Enver Gortash",
+                    "Get [Helldusk Boots](https://bg3.wiki/wiki/Helldusk_Boots) (excellent end-game boots)",
+                    "Get [Servitor of the Black Hand Gloves](https://bg3.wiki/wiki/Servitor_of_the_Black_Hand_Gloves)",
+                    "Get [Cloth of Authority](https://bg3.wiki/wiki/Cloth_of_Authority)",
+                    "Get [Gauntlet of the Tyrant](https://bg3.wiki/wiki/Gauntlet_of_the_Tyrant)",
+                    "Get [Fabricated Arbalest](https://bg3.wiki/wiki/Fabricated_Arbalest)",
+                    "Get [Tyrannical Jackboots](https://bg3.wiki/wiki/Tyrannical_Jackboots)"
+                ]
+            },
+            {
+                id: "wyrms-rock-prison",
+                title: "Wyrm's Rock Prison",
+                items: [
+                    "⏰|Only if arrested|Speak with Marvin the Unusual Skull",
+                    "Save Counsellor Florrick from prison"
+                ]
+            },
+            {
+                id: "wyrmway",
+                title: "Wyrmway",
+                items: [
+                    "⏰|Use shock damage on dragon heads|Find hidden passage to Wyrmway",
+                    "Gain access to the Wyrmway",
+                    "Complete Justice Trial (dismiss corrupt judge)",
+                    "Complete Insight Trial (find wrong assertion)",
+                    "Complete Strategy Trial (win lanceboard in two moves)",
+                    "Complete Courage Trial (defend torch bearer)",
+                    "Enter the Lair and speak with Ansur",
+                    "Get [Balduran's Giantslayer](https://bg3.wiki/wiki/Balduran%27s_Giantslayer) (best 2H sword for good runs)",
+                    "Get [Helm of Balduran](https://bg3.wiki/wiki/Helm_of_Balduran) (synergizes with specific items)"
+                ]
+            },
+            {
+                id: "basilisk-gate",
+                title: "Lower City - Basilisk Gate",
+                items: [
+                    "Stop the Presses (speak with Estra Stir)",
+                    "Help the Hag Survivors (read Anti-Hag Support Group posters)"
+                ]
+            },
+            {
+                id: "basilisk-barracks",
+                title: "Lower City - Basilisk Gate Barracks",
+                items: [
+                    "Speak with people at training grounds",
+                    "Save Vanra (speak with Lora)",
+                    "Speak with Skittle the Rat",
+                    "Buy Counting House Safe #2 Key from Skittle"
+                ]
+            },
+            {
+                id: "stormshore-tabernacle",
+                title: "Lower City - Stormshore Tabernacle",
+                items: [
+                    "Pray and give offering to your god",
+                    "⏰|Depends on companion quest progress|Gale's Audience with Mystra",
+                    "⏰|Will curse you if you steal|Loot Stormshore Tabernacle Basement",
+                    "Get [Amulet of The Devout](https://bg3.wiki/wiki/Amulet_of_The_Devout) (best amulet for casters)",
+                    "Get [Hammer of the Just](https://bg3.wiki/wiki/Hammer_of_the_Just)",
+                    "Get [Shield of Shielding](https://bg3.wiki/wiki/Shield_of_Shielding)"
+                ]
+            },
+            {
+                id: "vicar-humbletoes-vendor",
+                title: "Stormshore Tabernacle - Vicar Humbletoes (Vendor)",
+                items: [
+                    "Buy [Mantle of the Holy Warrior](https://bg3.wiki/wiki/Mantle_of_the_Holy_Warrior)",
+                    "Buy [The Reviving Hands](https://bg3.wiki/wiki/The_Reviving_Hands)",
+                    "Buy [The Sacred Star](https://bg3.wiki/wiki/The_Sacred_Star)"
+                ]
+            },
+            {
+                id: "elfsong-tavern",
+                title: "Lower City - Elfsong Tavern",
+                items: [
+                    "Speak with bartender about a murder",
+                    "Rent the rooms (new campsite + camp supplies from Dumbwaiter)",
+                    "Complete Roveer's Storehouse (clear rats from basement)",
+                    "Get [Keepsake Ring](https://bg3.wiki/wiki/Keepsake_Ring)",
+                    "Find entrance to Knights of the Shield Hideout",
+                    "⏰|After completing Roveer's Storehouse|Warn Roveer about assassination plot",
+                    "Participate in the Laff Riot",
+                    "⏰|Requires specific steps|Obtain Harvard Willoughby the Sheep",
+                    "Investigate murder in Elfsong Tavern (upstairs)"
+                ]
+            },
+            {
+                id: "knights-shield-hideout",
+                title: "Knights of the Shield Hideout",
+                items: [
+                    "⏰|Only if NOT marked for death by Vlaakith|Defeat Ch'r'ai Har'rak and Githyanki Warriors",
+                    "⏰|Only if NOT marked for death|Get [Hr'a'cknir Bracers](https://bg3.wiki/wiki/Hr%27a%27cknir_Bracers)",
+                    "⏰|Only if NOT marked for death|Get [Psionic Ward Armour](https://bg3.wiki/wiki/Psionic_Ward_Armour)",
+                    "Get [Boots of Psionic Movement](https://bg3.wiki/wiki/Boots_of_Psionic_Movement)",
+                    "Get [Cerebral Citadel Armour](https://bg3.wiki/wiki/Cerebral_Citadel_Armour)",
+                    "Get [Cerebral Citadel Gloves](https://bg3.wiki/wiki/Cerebral_Citadel_Gloves)",
+                    "Get [Sword of the Emperor](https://bg3.wiki/wiki/Sword_of_the_Emperor)"
+                ]
+            },
+            {
+                id: "highberry-home",
+                title: "Lower City - Highberry's Home / Wine Festival",
+                items: [
+                    "Warn Cora Highberry about assassination plot",
+                    "⏰|Before the fight|Loot Highberry's Home Basement (potions, scrolls, gold)",
+                    "Get Counting House Vault #4 Key (carried by Roger Highberry)",
+                    "⏰|Multiple encounters with Tara required|Speak with Tara on roof (sells [Slinging Shoes](https://bg3.wiki/wiki/Slinging_Shoes))",
+                    "Get [Slinging Shoes](https://bg3.wiki/wiki/Slinging_Shoes)"
+                ]
+            },
+            {
+                id: "dolor-encounter",
+                title: "Lower City - Dolor (Assassin)",
+                items: [
+                    "⏰|If missed here, encounter at Facemaker's Boutique|Defeat Dolor",
+                    "Get [Dolor Amarus](https://bg3.wiki/wiki/Dolor_Amarus)",
+                    "Get [Scarlet Leather Armour](https://bg3.wiki/wiki/Scarlet_Leather_Armour)",
+                    "Get [Spaceshunt Boots](https://bg3.wiki/wiki/Spaceshunt_Boots)"
+                ]
+            },
+            {
+                id: "bonecloaks-apothecary",
+                title: "Lower City - Bonecloack's Apothecary",
+                items: [
+                    "⏰|Only if Derryth survived Underdark|Store will be open",
+                    "⏰|Only if Baelen didn't survive|Find a companion for Derryth (cat near Sorcerous Sundries)",
+                    "Get Counting House Safe #3 Key (basement, in heavy chest)"
+                ]
+            },
+            {
+                id: "stormshore-armoury",
+                title: "Lower City - Stormshore Armoury",
+                items: [
+                    "Buy [Armour of Agility](https://bg3.wiki/wiki/Armour_of_Agility) from Gloomy Fentonson (best medium armor)",
+                    "⏰|Bring Karlach|Speak to Fytz with Karlach",
+                    "Buy [Flail of Ages](https://bg3.wiki/wiki/Flail_of_Ages) from Fytz",
+                    "Buy [The Dead Shot](https://bg3.wiki/wiki/The_Dead_Shot) from Fytz (excellent crit range stat stick)"
+                ]
+            },
+            {
+                id: "sorcerous-sundries",
+                title: "Lower City - Sorcerous Sundries",
+                items: [
+                    "⏰|Only if Rolan survived Act 2|Speak with Rolan",
+                    "Speak with Tolna Tome-Monger (find out about Annals of Karsus)",
+                    "⏰|Choose correct portal description|Choose correct portal to meet Lorroakan",
+                    "Find entrance to Sorcerous Vault"
+                ]
+            },
+            {
+                id: "rolan-lorroakan-vendor",
+                title: "Sorcerous Sundries - Rolan or Lorroakan's Projection (Vendor)",
+                items: [
+                    "Buy [Armour of Landfall](https://bg3.wiki/wiki/Armour_of_Landfall) (best caster robe with light armor proficiency)",
+                    "Buy [Birthright](https://bg3.wiki/wiki/Birthright) (best charisma caster hat)",
+                    "Buy [Harper Sacredstriker](https://bg3.wiki/wiki/Harper_Sacredstriker)",
+                    "Buy [Quickspell Gloves](https://bg3.wiki/wiki/Quickspell_Gloves)",
+                    "Buy [Ring of Regeneration](https://bg3.wiki/wiki/Ring_of_Regeneration) (synergizes with specific items)",
+                    "Buy [Vest of Soul Rejuvenation](https://bg3.wiki/wiki/Vest_of_Soul_Rejuvenation) (top-tier Monk armor)"
+                ]
+            },
+            {
+                id: "sorcerous-vault",
+                title: "Sorcerous Vault",
+                items: [
+                    "Gain access to Karsus Vault",
+                    "Get [Foebreaker](https://bg3.wiki/wiki/Foebreaker)",
+                    "Get [Hellfire Greataxe](https://bg3.wiki/wiki/Hellfire_Greataxe)",
+                    "Gain access to Elminster Vault",
+                    "Get [Pyroquickness Hat](https://bg3.wiki/wiki/Pyroquickness_Hat)",
+                    "Get Genie Lamp"
+                ]
+            },
+            {
+                id: "ramaziths-tower",
+                title: "Ramazith's Tower",
+                items: [
+                    "Speak with Lorroakan (decide if you want to help)",
+                    "⏰|Jump down from Lorroakan's level|Get High Security Vault #1 Key (lower level)",
+                    "⏰|Jump down from Lorroakan's level|Get [Markoheshkir](https://bg3.wiki/wiki/Markoheshkir) (best caster weapon)",
+                    "⏰|Jump down from Lorroakan's level|Get [Robe of the Weave](https://bg3.wiki/wiki/Robe_of_the_Weave) (top-tier caster armor)",
+                    "Get [Despair of Athkatla](https://bg3.wiki/wiki/Despair_of_Athkatla)",
+                    "Get [Shelter of Athkatla](https://bg3.wiki/wiki/Shelter_of_Athkatla)",
+                    "Decide fate of the Nightsong"
+                ]
+            },
+            {
+                id: "felogyrs-fireworks",
+                title: "Lower City - Felogyr's Fireworks",
+                items: [
+                    "Speak with people at Felogyr's Fireworks",
+                    "⏰|Easier after Steel Watch Foundry|Defeat the cultists (wraps up Suspicious Toys quest)",
+                    "⏰|Don't forget basement|Loot Felogyr's Fireworks (all floors + basement)"
+                ]
+            },
+            {
+                id: "philgrave-mansion",
+                title: "Lower City - Philgrave Mansion",
+                items: [
+                    "Speak with Mystic Carrion",
+                    "Find Mystic Carrion's Servant (Strange Beggar Lumbar may know)"
+                ]
+            },
+            {
+                id: "mystic-carrion-loot",
+                title: "Philgrave Mansion - Mystic Carrion (Defeated)",
+                items: [
+                    "Get [Staff of Cherished Necromancy](https://bg3.wiki/wiki/Staff_of_Cherished_Necromancy) (perfect Necromancer weapon)",
+                    "Get [Torch of Revocation](https://bg3.wiki/wiki/Torch_of_Revocation)",
+                    "Get [Armour of the Sporekeeper](https://bg3.wiki/wiki/Armour_of_the_Sporekeeper) (best Spore Druid armor)",
+                    "Get [Hood of the Weave](https://bg3.wiki/wiki/Hood_of_the_Weave) (best caster headwear)",
+                    "Get [Veil of the Morning](https://bg3.wiki/wiki/Veil_of_the_Morning)",
+                    "Get [Crypt Lord Ring](https://bg3.wiki/wiki/Crypt_Lord_Ring)"
+                ]
+            },
+            {
+                id: "peartree-house",
+                title: "Lower City - Peartree House",
+                items: [
+                    "Investigate Peartree House and Basement",
+                    "Get [Soul Coin](https://bg3.wiki/wiki/Soul_Coin)",
+                    "Get [Half Plate Armour +2](https://bg3.wiki/wiki/Half_Plate_Armour_%2B2)",
+                    "Get [Shortsword +2](https://bg3.wiki/wiki/Shortsword_%2B2)",
+                    "Get 2x [Soul Coin](https://bg3.wiki/wiki/Soul_Coin)",
+                    "Get Clown's Severed Arm"
+                ]
+            },
+            {
+                id: "flymms-cobblers",
+                title: "Lower City - Flymm's Cobblers",
+                items: [
+                    "Speak with Dravo and Sally Flymm"
+                ]
+            },
+            {
+                id: "old-garlows-place",
+                title: "Lower City - Old Garlow's Place",
+                items: [
+                    "⏰|Reward for completing Help Hag Survivors|Get [Staff of Interruption](https://bg3.wiki/wiki/Staff_of_Interruption)",
+                    "⏰|After completing Help Hag Survivors|Start Avenge the Hag Survivors",
+                    "Get [Fey Semblance Amulet](https://bg3.wiki/wiki/Fey_Semblance_Amulet)"
+                ]
+            },
+            {
+                id: "beehive-general-goods",
+                title: "Lower City - Beehive General Goods",
+                items: [
+                    "Talk and trade with Oliver Tefoco (sells camp supplies)",
+                    "Get Counting House Safe #7 Key (loot from Oliver)",
+                    "Check out Beehive Basement"
+                ]
+            },
+            {
+                id: "rainforests-home",
+                title: "Lower City - Rainforest's Home",
+                items: [
+                    "Investigate Rainforest's Home and Basement",
+                    "Get Clown's Severed Foot"
+                ]
+            },
+            {
+                id: "crimson-draughts",
+                title: "Lower City - Crimson Draughts",
+                items: [
+                    "⏰|Only if she survived Act 2 and you gave blood|Talk with Araj",
+                    "Investigate the Sanguine Laboratory"
+                ]
+            },
+            {
+                id: "lavernicas-home",
+                title: "Lower City - Lavernica's Home",
+                items: [
+                    "Investigate Lavernica's Home and Basement",
+                    "Get Clown's Severed Leg"
+                ]
+            },
+            {
+                id: "bloombridge-park",
+                title: "Lower City - Bloombridge Park",
+                items: [
+                    "Deal with Bhaalist Ambush",
+                    "Get [Murderous Cut](https://bg3.wiki/wiki/Murderous_Cut) (carried by Bhaal cultists)"
+                ]
+            },
+            {
+                id: "golbraiths-cellar",
+                title: "Lower City - Golbraith's Cellar",
+                items: [
+                    "Speak with Golbraith",
+                    "Get [Abdel's Trusted Shield](https://bg3.wiki/wiki/Abdel%27s_Trusted_Shield)",
+                    "Get [Katana](https://bg3.wiki/wiki/Katana)"
+                ]
+            },
+            {
+                id: "the-lodge",
+                title: "Lower City - The Lodge",
+                items: [
+                    "⏰|Only if you didn't give egg to Lady Esther|Speak with Society of Brilliance members",
+                    "⏰|If you didn't deliver egg|Start Retrieve Omeluum",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen) (second floor library)",
+                    "⏰|Only if you delivered egg to Lady Esther|Get [Unflinching Protector Amulet](https://bg3.wiki/wiki/Unflinching_Protector_Amulet)"
+                ]
+            },
+            {
+                id: "lady-jannaths-estate",
+                title: "Lower City - Lady Jannath's Estate",
+                items: [
+                    "⏰|Depends on saving Oskar in Act 1|Investigate the Manor (haunted if saved, art exhibition if not)",
+                    "Get [Till Death Do Us Part](https://bg3.wiki/wiki/Till_Death_Do_Us_Part)",
+                    "⏰|Only if Oskar rescued Act 1|Get [After Death Do Us Part](https://bg3.wiki/wiki/After_Death_Do_Us_Part)"
+                ]
+            },
+            {
+                id: "elerrathin-home",
+                title: "Lower City - Elerrathin's Home (Jaheira's)",
+                items: [
+                    "⏰|Bring Jaheira for easier exploration|Speak with inhabitants",
+                    "Explore Jaheira's Basement",
+                    "Get [Staff of the Ram](https://bg3.wiki/wiki/Staff_of_the_Ram)",
+                    "Get [Belm](https://bg3.wiki/wiki/Belm)",
+                    "Get [Khalid's Gift](https://bg3.wiki/wiki/Khalid%27s_Gift) (best Monk amulet with +1 WIS)"
+                ]
+            },
+            {
+                id: "facemakers-boutique",
+                title: "Lower City - Facemaker's Boutique",
+                items: [
+                    "⏰|Only if Dolor escaped Wine Festival|Deal with Dolor",
+                    "⏰|Only if Figaro not killed|Buy fancy clothes"
+                ]
+            },
+            {
+                id: "house-of-grief",
+                title: "Lower City - House of Grief",
+                items: [
+                    "Speak with Arves",
+                    "Do Mapping of the Heart"
+                ]
+            },
+            {
+                id: "cloister-sombre-embrace",
+                title: "Cloister of Sombre Embrace",
+                items: [
+                    "Gain access to Cloister of Sombre Embrace",
+                    "Deal with the Sharrans",
+                    "Get [Handmaiden's Mace](https://bg3.wiki/wiki/Handmaiden%27s_Mace) (alternative to Club of Hill Giant Strength)",
+                    "Get [Viconia's Priestess Robe](https://bg3.wiki/wiki/Viconia%27s_Priestess_Robe)",
+                    "Get [Viconia's Walking Fortress](https://bg3.wiki/wiki/Viconia%27s_Walking_Fortress) (best shield in game)",
+                    "Get High Security Vault #8 Key",
+                    "Get Hastily Written Note",
+                    "Complete Threshold of Loss",
+                    "Speak with Arnell & Emmeline Hallowleaf",
+                    "Use Mirror of Loss"
+                ]
+            },
+            {
+                id: "grey-harbour-docks",
+                title: "Lower City - Grey Harbour Docks",
+                items: [
+                    "⏰|Only if Volo survived Act 1|Rescue Volo",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen)"
+                ]
+            },
+            {
+                id: "water-queens-house",
+                title: "Lower City - Water Queen's House",
+                items: [
+                    "Complete Avenge the Drowned",
+                    "Get High Security Vault #4 Key",
+                    "Get [Wavemother's Cloak](https://bg3.wiki/wiki/Wavemother%27s_Cloak)",
+                    "Get [Wavemother's Robe](https://bg3.wiki/wiki/Wavemother%27s_Robe)",
+                    "Get [Wavemother's Sickle](https://bg3.wiki/wiki/Wavemother%27s_Sickle)",
+                    "Explore Water Queen's Cellar"
+                ]
+            },
+            {
+                id: "iron-throne",
+                title: "Lower City - Flymm Cargo's Basement / Iron Throne",
+                items: [
+                    "Enter Flymm Cargo's Basement",
+                    "Get to the Iron Throne",
+                    "⏰|Timed encounter|Save the hostages",
+                    "⏰|Timed encounter|Save Duke Ulder Ravengard",
+                    "⏰|Only if didn't give egg to Lady Esther|Retrieve Omeluum",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen)",
+                    "Get High Security Vault #6 Key",
+                    "Get [Emblazoned Plate of the Marshal](https://bg3.wiki/wiki/Emblazoned_Plate_of_the_Marshal)",
+                    "Get [Duke Ravengard's Longsword](https://bg3.wiki/wiki/Duke_Ravengard%27s_Longsword)"
+                ]
+            },
+            {
+                id: "steel-watch-foundry",
+                title: "Lower City - Steel Watch Foundry",
+                items: [
+                    "Enter the Steel Watch Foundry",
+                    "⏰|Must visit Iron Throne first|Save the Gondians",
+                    "⏰|Do BEFORE fighting Titan|Get [Steelwatcher Helmet](https://bg3.wiki/wiki/Steelwatcher_Helmet)",
+                    "⏰|Do BEFORE fighting Titan|Craft [Hellfire Engine Crossbow](https://bg3.wiki/wiki/Hellfire_Engine_Crossbow)",
+                    "Get [Winkling Gloves](https://bg3.wiki/wiki/Winkling_Gloves)",
+                    "Defeat Steel Watcher Titan (Lv. 11-12)",
+                    "⏰|Loot BEFORE continuing|Get [Gontr Mael](https://bg3.wiki/wiki/Gontr_Mael)",
+                    "Get [Infernal Mace](https://bg3.wiki/wiki/Infernal_Mace) (carried by Flaming Fists)"
+                ]
+            },
+            {
+                id: "lower-city-graveyard",
+                title: "Lower City - Graveyard",
+                items: [
+                    "Speak with Bugthimble",
+                    "Get [Kurwin's Cauteriser](https://bg3.wiki/wiki/Kurwin%27s_Cauteriser)",
+                    "Speak with Gothric Rillyn",
+                    "Get [Magical Pike](https://bg3.wiki/wiki/Magical_Pike)",
+                    "⏰|Multiple locations|Explore Lower City Graveyard (Ancient, Durinbold, Mortuary, Hhune, Gorion Mausoleums)"
+                ]
+            },
+            {
+                id: "murder-tribunal",
+                title: "Lower City - Murder Tribunal",
+                items: [
+                    "Enter the Murder Tribunal",
+                    "Confront Sarevok Anchev",
+                    "Get [Blackguard's Gauntlets](https://bg3.wiki/wiki/Blackguard%27s_Gauntlets)",
+                    "Get [Blackguard's Greaves](https://bg3.wiki/wiki/Blackguard%27s_Greaves)",
+                    "Get [Blackguard's Plate](https://bg3.wiki/wiki/Blackguard%27s_Plate)",
+                    "Get [Blackguard's Sword](https://bg3.wiki/wiki/Blackguard%27s_Sword)",
+                    "Get [Sword of Chaos](https://bg3.wiki/wiki/Sword_of_Chaos)",
+                    "Get [Sarevok's Horned Helmet](https://bg3.wiki/wiki/Sarevok%27s_Horned_Helmet)",
+                    "Get [Shield of the Undevout](https://bg3.wiki/wiki/Shield_of_the_Undevout)",
+                    "Decide fate of Bhaal Cultist's prisoner"
+                ]
+            },
+            {
+                id: "echo-abazigal",
+                title: "Murder Tribunal - Echo of Abazigal (Unholy Assassin)",
+                items: [
+                    "⏰|Only if became Unholy Assassin|Get [Assassin of Bhaal Cowl](https://bg3.wiki/wiki/Assassin_of_Bhaal_Cowl)",
+                    "⏰|Only if became Unholy Assassin|Get [Bhaalist Armour](https://bg3.wiki/wiki/Bhaalist_Armour) (best light armor)",
+                    "⏰|Only if became Unholy Assassin|Get [Bhaalist Gloves](https://bg3.wiki/wiki/Bhaalist_Gloves)",
+                    "⏰|Only if became Unholy Assassin|Get [Craterflesh Gloves](https://bg3.wiki/wiki/Craterflesh_Gloves) (excellent for Eldritch Blast - BUGGED creates extra ray)",
+                    "⏰|Only if became Unholy Assassin|Get [Dolor Amarus](https://bg3.wiki/wiki/Dolor_Amarus)",
+                    "⏰|Only if became Unholy Assassin|Get [Dread Iron Dagger](https://bg3.wiki/wiki/Dread_Iron_Dagger)",
+                    "⏰|Only if became Unholy Assassin|Get [Fleshrender](https://bg3.wiki/wiki/Fleshrender)",
+                    "⏰|Only if became Unholy Assassin|Get [Vicious Battleaxe](https://bg3.wiki/wiki/Vicious_Battleaxe)",
+                    "⏰|Only if became Unholy Assassin|Get [Vicious Shortbow](https://bg3.wiki/wiki/Vicious_Shortbow)"
+                ]
+            },
+            {
+                id: "blushing-mermaid",
+                title: "Lower City - The Blushing Mermaid",
+                items: [
+                    "⏰|Depends on Act 1 choices with Hag|Explore Blushing Maid Tavern and Basement"
+                ]
+            },
+            {
+                id: "blushing-mermaid-basement",
+                title: "Blushing Mermaid - Basement",
+                items: [
+                    "Defeat Captain Grisly & Masks (Lv. 8)",
+                    "Get [Mind Flayer Parasite Specimen](https://bg3.wiki/wiki/Mind_Flayer_Parasite_Specimen)",
+                    "Get [Salty Scimitar(rrr)](https://bg3.wiki/wiki/Salty_Scimitar(rrr))",
+                    "Defeat The Hag",
+                    "Get [Ring of Feywild Sparks](https://bg3.wiki/wiki/Ring_of_Feywild_Sparks) (best ring for casters - unlisted +1 Spell Save DC)",
+                    "Get [Tarnished Charm](https://bg3.wiki/wiki/Tarnished_Charm)"
+                ]
+            },
+            {
+                id: "loras-house",
+                title: "Lower City - Lora's House",
+                items: [
+                    "⏰|Reward for saving Vanra|Get [Amulet of Windrider](https://bg3.wiki/wiki/Amulet_of_Windrider)",
+                    "⏰|Reward for completing Save Vanra|Get [Duellist's Prerogative](https://bg3.wiki/wiki/Duellist%27s_Prerogative)"
+                ]
+            },
+            {
+                id: "counting-house",
+                title: "Lower City - Counting House",
+                items: [
+                    "⏰|Multiple methods available|Obtain a Bank Pass",
+                    "Get [Amulet of Restoration](https://bg3.wiki/wiki/Amulet_of_Restoration)",
+                    "⏰|Use Gaseous Form, Shapechanger, Misty Step, or Transposition Arrow|Loot safes at basement",
+                    "⏰|Jump over glyphs OR hit buttons to disable|Loot vaults",
+                    "Loot High Security Vaults",
+                    "Get access to High Security Vaults",
+                    "Defeat Bhaal Cultists",
+                    "⏰|Only if Rakath survived|Return Rakath's Gold",
+                    "⏰|Reward OR steal from Vault 9|Get [Elegant Studded Leather](https://bg3.wiki/wiki/Elegant_Studded_Leather)",
+                    "Get [Nymph Cloak](https://bg3.wiki/wiki/Nymph_Cloak)",
+                    "Get [Jannath's Hat](https://bg3.wiki/wiki/Jannath%27s_Hat)",
+                    "Get [Trident of the Waves](https://bg3.wiki/wiki/Trident_of_the_Waves)",
+                    "Get [Ravengard's Scourger](https://bg3.wiki/wiki/Ravengard%27s_Scourger)",
+                    "Get [Knock Knuckle Gloves](https://bg3.wiki/wiki/Knock_Knuckle_Gloves)",
+                    "Get [Spell Savant Amulet](https://bg3.wiki/wiki/Spell_Savant_Amulet)",
+                    "Get [The Long Arm of the Gur](https://bg3.wiki/wiki/The_Long_Arm_of_the_Gur)"
+                ]
+            },
+            {
+                id: "devils-fee",
+                title: "Lower City - Devil's Fee",
+                items: [
+                    "Buy [Caitiff Staff](https://bg3.wiki/wiki/Caitiff_Staff) from Helsik",
+                    "Buy [Cloak of The Weave](https://bg3.wiki/wiki/Cloak_of_The_Weave) from Helsik (best cloak for casters)",
+                    "Buy [Gemini Gloves](https://bg3.wiki/wiki/Gemini_Gloves) from Helsik",
+                    "Buy [Gibus of the Worshipful Servant](https://bg3.wiki/wiki/Gibus_of_the_Worshipful_Servant) from Helsik (advantage on Concentration saves)",
+                    "Buy [Hellbeard Halberd](https://bg3.wiki/wiki/Hellbeard_Halberd) from Helsik",
+                    "Buy [Shapeshifter Hat](https://bg3.wiki/wiki/Shapeshifter_Hat) from Helsik",
+                    "Buy [Spellseeking Gloves](https://bg3.wiki/wiki/Spellseeking_Gloves) from Helsik",
+                    "Get inside and investigate Helsik's Private Quarters",
+                    "⏰|Buy materials from Helsik|Complete ritual to access House of Hope",
+                    "Get [Mask of Soul Perception](https://bg3.wiki/wiki/Mask_of_Soul_Perception)",
+                    "⏰|On roof of Devil's Fee|Buy [Hat of the Sharp Caster](https://bg3.wiki/wiki/Hat_of_the_Sharp_Caster) from Tara"
+                ]
+            },
+            {
+                id: "act3-finale",
+                title: "Act 3 Finale",
+                items: [
+                    "Complete all companion quests in Act 3",
+                    "Long rest for companion conversations",
+                    "Resolve all major faction questlines",
+                    "Get Clown's Severed Pelvis (Lower City)",
+                    "Get Clown's Severed Head (Lower City)",
+                    "⏰|Point of no return for Act 3|Prepare for final confrontation"
+                ]
+            }
+        ];
+        const allActsData = {
+            act1: act1Data,
+            act2: act2Data,
+            act3: act3Data
+        };
+
+        // Track current act
+        let currentAct = 'act1';
+
+        // Initialize the checklist
+        function initChecklist() {
+            // Initialize all acts
+            Object.keys(allActsData).forEach(actKey => {
+                const containerId = actKey + '-container';
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                const actData = allActsData[actKey];
+                
+                // Build sections for this act
+                actData.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'section';
+                    sectionDiv.id = section.id;
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    progressBar.innerHTML = `<div class="progress-fill" id="progress-${section.id}"></div>`;
+
+                    const progressText = document.createElement('div');
+                    progressText.className = 'progress-text';
+                    progressText.id = `progress-text-${section.id}`;
+
+                    // Section header
+                    const header = document.createElement('div');
+                    header.className = 'section-header';
+                    header.innerHTML = `
+                        <h2>${section.title}</h2>
+                        <span class="toggle-icon">▼</span>
+                    `;
+                    header.onclick = () => toggleSection(section.id);
+
+                    // Section content
+                    const content = document.createElement('div');
+                    content.className = 'section-content';
+                    content.id = `content-${section.id}`;
+
+                    section.items.forEach((item, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'checklist-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `${section.id}-${index}`;
+                        checkbox.checked = isChecked(section.id, index);
+                        checkbox.onchange = (e) => saveCheckbox(section.id, index, e.target.checked);
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = `${section.id}-${index}`;
+                        
+                        // Parse time-sensitive markers and wiki links
+                        let text = item;
+                        
+                        // Check for time-sensitive marker
+                        const timeMatch = item.match(/^⏰\|([^|]+)\|(.+)$/);
+                        if (timeMatch) {
+                            const tooltip = timeMatch[1];
+                            text = timeMatch[2];
+                            
+                            const warningIcon = document.createElement('span');
+                            warningIcon.className = 'time-warning time-sensitive';
+                            warningIcon.textContent = '⏰';
+                            warningIcon.title = tooltip;
+                            
+                            // Create tooltip div for mobile
+                            const tooltipDiv = document.createElement('div');
+                            tooltipDiv.className = 'tooltip-text';
+                            tooltipDiv.textContent = tooltip;
+                            
+                            // Add click handler for mobile (prevent checkbox toggle)
+                            warningIcon.onclick = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                tooltipDiv.classList.toggle('show');
+                            };
+                            
+                            label.appendChild(warningIcon);
+                            label.appendChild(document.createTextNode(' '));
+                            // Add tooltip div after the label content
+                            itemDiv.tooltipDiv = tooltipDiv; // Store reference
+                        }
+                        
+                        // Parse wiki links [text](url)
+                        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+                        let lastIndex = 0;
+                        let match;
+                        
+                        while ((match = linkRegex.exec(text)) !== null) {
+                            // Add text before the link
+                            if (match.index > lastIndex) {
+                                label.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                            }
+                            
+                            // Create the link
+                            const link = document.createElement('a');
+                            link.href = match[2];
+                            link.textContent = match[1];
+                            link.className = 'wiki-link';
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            label.appendChild(link);
+                            
+                            lastIndex = linkRegex.lastIndex;
+                        }
+                        
+                        // Add remaining text
+                        if (lastIndex < text.length) {
+                            label.appendChild(document.createTextNode(text.substring(lastIndex)));
+                        }
+
+                        itemDiv.appendChild(checkbox);
+                        itemDiv.appendChild(label);
+                        
+                        // Add tooltip div if exists (for time-sensitive items)
+                        // Tooltip will appear on its own line below the checkbox/label
+                        if (itemDiv.tooltipDiv) {
+                            itemDiv.appendChild(itemDiv.tooltipDiv);
+                        }
+                        
+                        content.appendChild(itemDiv);
+                    });
+
+                    sectionDiv.appendChild(header);
+                    sectionDiv.appendChild(progressBar);
+                    sectionDiv.appendChild(progressText);
+                    sectionDiv.appendChild(content);
+                    container.appendChild(sectionDiv);
+
+                    updateProgress(section.id);
+                });
+            });
+            
+            // Update navigation for initial act
+            updateSectionDropdown('act1');
+        }
+
+        // Update section dropdown for current act
+        function updateSectionDropdown(actKey) {
+            const nav = document.getElementById('sectionNav');
+            nav.innerHTML = '<option value="">Jump to section...</option>';
+            
+            const actData = allActsData[actKey];
+            if (actData) {
+                actData.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = section.title;
+                    nav.appendChild(option);
+                });
+            }
+        }
+
+        // Switch between acts
+        function switchTab(actKey) {
+            currentAct = actKey;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-act') === actKey) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show/hide containers
+            document.querySelectorAll('.act-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            const activeContainer = document.getElementById(actKey + '-container');
+            if (activeContainer) {
+                activeContainer.style.display = 'block';
+            }
+            
+            // Update dropdown
+            updateSectionDropdown(actKey);
+        }
+
+        // Toggle section collapse
+        function toggleSection(sectionId) {
+            const content = document.getElementById(`content-${sectionId}`);
+            const header = content.previousElementSibling.previousElementSibling.previousElementSibling;
+            
+            content.classList.toggle('hidden');
+            header.classList.toggle('collapsed');
+        }
+
+        // Navigate to section
+        function navigateToSection(sectionId) {
+            if (!sectionId) return;
+            
+            const section = document.getElementById(sectionId);
+            if (section) {
+                // Offset for sticky header
+                const offset = 100;
+                const elementPosition = section.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+
+                // Reset dropdown
+                document.getElementById('sectionNav').value = '';
+            }
+        }
+
+        // Check if checkbox is checked in localStorage
+        function isChecked(sectionId, itemIndex) {
+            const key = `${sectionId}-${itemIndex}`;
+            return localStorage.getItem(key) === 'true';
+        }
+
+        // Save checkbox state
+        function saveCheckbox(sectionId, itemIndex, checked) {
+            const key = `${sectionId}-${itemIndex}`;
+            localStorage.setItem(key, checked);
+            updateProgress(sectionId);
+        }
+
+        // Update progress bar for a section
+        function updateProgress(sectionId) {
+            // Find the section across all acts
+            let section = null;
+            for (const actKey in allActsData) {
+                section = allActsData[actKey].find(s => s.id === sectionId);
+                if (section) break;
+            }
+            if (!section) return;
+
+            let completed = 0;
+            section.items.forEach((item, index) => {
+                if (isChecked(sectionId, index)) {
+                    completed++;
+                }
+            });
+
+            const percentage = (completed / section.items.length) * 100;
+            const progressFill = document.getElementById(`progress-${sectionId}`);
+            const progressText = document.getElementById(`progress-text-${sectionId}`);
+
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+            if (progressText) {
+                progressText.textContent = `${completed} / ${section.items.length} completed (${Math.round(percentage)}%)`;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initChecklist);
+    </script>
+</body>
+</html>
