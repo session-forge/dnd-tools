@@ -426,7 +426,10 @@
                 <span>🎲</span>
                 <h1>Dice Roller <span class="version">v1.21</span></h1>
             </div>
-            <button class="btn" id="historyToggle">📜</button>
+            <div style="display:flex;gap:0.5rem;">
+                <a href="index.html" class="btn" style="text-decoration:none;display:flex;align-items:center;font-size:14px;">← Home</a>
+                <button class="btn" id="historyToggle">📜</button>
+            </div>
         </div>
 
         <div id="mainView">
@@ -715,10 +718,11 @@
                 
                 state.rollHistory.unshift(result);
                 state.lastRoll = rollConfig;
-                
+
                 updateResults();
                 updateHistory();
                 updateUI();
+                saveToStorage();
                 
                 rollBtn.disabled = false;
                 rollBtn.textContent = `Roll ${state.quantity}${state.selectedDie}${state.modifier !== 0 ? (state.modifier > 0 ? ` +${state.modifier}` : ` ${state.modifier}`) : ''}`;
@@ -768,7 +772,8 @@
                     state.rollHistory.unshift(result);
                     updateResults();
                     updateHistory();
-                    
+                    saveToStorage();
+
                     rollsCompleted++;
                     
                     if (rollsCompleted < 6) {
@@ -823,6 +828,27 @@
             
             updateResults();
             updateHistory();
+            saveToStorage();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('diceRollerHistory', JSON.stringify(state.rollHistory));
+            localStorage.setItem('diceRollerStatSetId', state.currentStatSetId);
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('diceRollerHistory');
+            if (saved) {
+                try {
+                    state.rollHistory = JSON.parse(saved);
+                } catch (e) {
+                    state.rollHistory = [];
+                }
+            }
+            const savedId = localStorage.getItem('diceRollerStatSetId');
+            if (savedId !== null) {
+                state.currentStatSetId = parseInt(savedId);
+            }
         }
 
         // Event Listeners
@@ -916,11 +942,18 @@
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             state.rollHistory = [];
+            state.lastRoll = null;
+            state.showingStatRolls = false;
+            updateResults();
             updateHistory();
             updateUI();
+            saveToStorage();
         });
 
         // Initialize
+        loadFromStorage();
+        updateResults();
+        updateHistory();
         updateUI();
     </script>
 </body>

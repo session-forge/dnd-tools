@@ -206,7 +206,10 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1>D&D 5e Combat Encounter Generator</h1>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <h1 style="margin-bottom:0;">D&D 5e Combat Encounter Generator</h1>
+                <a href="index.html" style="color:#4b5563;text-decoration:none;font-size:14px;background:#f3f4f6;padding:6px 12px;border-radius:6px;white-space:nowrap;">← Home</a>
+            </div>
             
             <!-- Basic Info -->
             <div class="section section-blue">
@@ -223,10 +226,9 @@
                     <div>
                         <label>Difficulty</label>
                         <select id="difficulty">
-                            <option>Easy</option>
+                            <option>Low</option>
                             <option selected>Moderate</option>
-                            <option>Hard</option>
-                            <option>Deadly</option>
+                            <option>High</option>
                         </select>
                     </div>
                     <div>
@@ -432,9 +434,9 @@
             const crLine = lines.find(l => l.startsWith('CR '));
             if (crLine) {
                 const crMatch = crLine.match(/CR (\d+(?:\/\d+)?)/);
-                const xpMatch = crLine.match(/XP (\d+)/);
+                const xpMatch = crLine.match(/XP ([\d,]+)/);
                 if (crMatch) result.cr = crMatch[1];
-                if (xpMatch) result.xp = xpMatch[1];
+                if (xpMatch) result.xp = xpMatch[1].replace(/,/g, '');
             }
 
             const traitsIndex = lines.findIndex(l => l === 'Traits');
@@ -741,8 +743,7 @@
                     });
                 }
             } else {
-                md += `- **Loot:**\n\t- [Items]\n\t- [Gold amount]\n`;
-                md += `- **Information:**\n\t- [Story intel gained]\n`;
+                md += `- None\n`;
             }
             md += `\n---\n\n`;
 
