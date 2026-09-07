@@ -33,7 +33,7 @@ button{cursor:pointer;background:none;border:none}
 
 /* ---------- top bar ---------- */
 .bar{
-  display:flex;align-items:center;gap:14px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   padding:8px 14px;background:var(--panel);
   border-bottom:1px solid var(--line);flex:none;
 }
@@ -178,8 +178,12 @@ body.resizing{user-select:none;cursor:col-resize}
 .card h3{font-size:16px;font-weight:600;margin-bottom:3px}
 .card p.sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
 .card label{display:block;font-size:12px;color:var(--dim);margin:9px 0 3px}
-.card input,.card select{width:100%;padding:8px 10px;background:var(--raised);border:1px solid var(--line);border-radius:5px}
-.card input:focus,.card select:focus{border-color:var(--brass);outline:none}
+.card input,.card select,.card textarea{width:100%;padding:8px 10px;background:var(--raised);border:1px solid var(--line);border-radius:5px}
+.card input:focus,.card select:focus,.card textarea:focus{border-color:var(--brass);outline:none}
+.card textarea{min-height:86px;resize:vertical;font-family:inherit;line-height:1.5}
+.quad{display:grid;grid-template-columns:1fr 68px 68px 68px;gap:8px}
+.notes{white-space:pre-wrap}
+.editing{border-color:var(--brass)!important}
 .trio{display:grid;grid-template-columns:1fr 76px 76px;gap:8px}
 .acts{display:flex;gap:8px;margin-top:16px}
 .acts .btn{flex:1;text-align:center}
@@ -222,6 +226,7 @@ body.resizing{user-select:none;cursor:col-resize}
   <span class="round"><b id="roundNum">—</b><span>round</span></span>
   <span class="spacer"></span>
   <button class="btn quiet" id="btnParty">Party</button>
+  <button class="btn quiet" id="btnBest">Bestiary</button>
   <button class="btn quiet" id="btnSave">Encounters</button>
   <button class="btn quiet danger" id="btnClear">Clear</button>
   <button class="btn" id="btnPrev">Back</button>
@@ -284,6 +289,29 @@ body.resizing{user-select:none;cursor:col-resize}
   </div>
 </div>
 
+<!-- custom bestiary -->
+<div class="sheet" id="bestSheet" hidden>
+  <div class="card">
+    <h3>Bestiary</h3>
+    <p class="sub" id="bestSub">Your own creatures, saved on this computer. They turn up in
+      search alongside the SRD monsters, tagged as custom.</p>
+    <div class="quad">
+      <div><label for="bName">Name</label><input id="bName" placeholder="Mind Flayer"></div>
+      <div><label for="bAC">AC</label><input id="bAC" type="number" value="15"></div>
+      <div><label for="bHP">HP</label><input id="bHP" type="number" value="10"></div>
+      <div><label for="bInit">Init</label><input id="bInit" type="number" value="0"></div>
+    </div>
+    <label for="bNotes">Notes (optional)</label>
+    <textarea id="bNotes" placeholder="Whatever you want on screen during its turn — attack lines, save DCs, tactics, page number."></textarea>
+    <div class="acts">
+      <button class="btn go" id="bSave">Add to bestiary</button>
+      <button class="btn quiet" id="bCancel" hidden>Cancel edit</button>
+    </div>
+    <div class="roster" id="bestList"></div>
+    <div class="acts"><button class="btn quiet" data-close>Close</button></div>
+  </div>
+</div>
+
 <!-- saved encounters -->
 <div class="sheet" id="saveSheet" hidden>
   <div class="card">
@@ -335,19 +363,41 @@ const store = (() => {
 const readJSON  = (k, d) => { try { return JSON.parse(store.get(k)) ?? d; } catch(e){ return d; } };
 const writeJSON = (k, v) => store.set(k, JSON.stringify(v));
 
-const K_ENC = "init.encounter", K_PARTY = "init.party", K_SAVED = "init.saved";
+const K_ENC = "init.encounter", K_PARTY = "init.party", K_SAVED = "init.saved",
+      K_BEST = "init.bestiary";
 
 /* ---------- state ---------- */
 let combatants = [];
 let round = 0;                 // 0 = not started
 let activeId = null;
-let shown = null;   // monster name currently in the side panel
+let shown = null;   // {srd:name} or {snap:{...}} — what's in the side panel
 let seq = 0;
 const uid = () => "c" + (++seq) + Date.now().toString(36);
 
-const monsters = (typeof SRD_MONSTERS !== "undefined" ? SRD_MONSTERS : [])
-  .slice().sort((a, b) => a.name.localeCompare(b.name));
-const byName = Object.fromEntries(monsters.map(m => [m.name, m]));
+const srd = (typeof SRD_MONSTERS !== "undefined" ? SRD_MONSTERS : []);
+const srdByName = Object.fromEntries(srd.map(m => [m.name, m]));
+
+const bestiary = () => readJSON(K_BEST, []);
+
+/* One list backs the search box: SRD stat blocks plus the DM's own creatures.
+   SRD entries key on their name (so encounters saved earlier still load);
+   custom ones key on an id, so renaming a creature doesn't orphan anything. */
+let catalog = [], byKey = {};
+function buildCatalog(){
+  catalog = srd.map(m => ({
+    key: m.name, name: m.name, label: m.name, custom: false, data: m,
+    ac: m.ac, hp: m.hp, initMod: m.initMod,
+    sub: `CR ${m.cr} · ${m.size} ${m.type}`,
+    hint: `CR ${m.cr} · AC ${m.ac} · ${m.hp} HP`
+  })).concat(bestiary().map(b => ({
+    key: "custom:" + b.id, name: b.name, label: b.name + " (Custom)", custom: true, data: b,
+    ac: b.ac, hp: b.hp, initMod: b.initMod,
+    sub: "Custom creature",
+    hint: `AC ${b.ac} · ${b.hp} HP · init ${b.initMod >= 0 ? "+" : ""}${b.initMod}`
+  })));
+  catalog.sort((a, b) => a.name.localeCompare(b.name));
+  byKey = Object.fromEntries(catalog.map(e => [e.key, e]));
+}
 
 const $ = id => document.getElementById(id);
 
@@ -358,23 +408,28 @@ function ordered(){
 }
 
 /* ---------- adding ---------- */
-function addMonster(name, count){
-  const m = byName[name];
-  if (!m) return;
+function addMonster(key, count){
+  const e = byKey[key];
+  if (!e) return;
   const sep = $("optSepInit").checked;
-  const shared = m.initMod + die(20);
-  const existing = combatants.filter(c => c.src === name).length;
+  const shared = e.initMod + die(20);
+  const existing = combatants.filter(c => c.src === key).length;
 
   for (let i = 0; i < count; i++){
-    const hp = $("optRollHP").checked ? (rollFormula(m.hpDice) ?? m.hp) : m.hp;
-    combatants.push({
+    const hp = (!e.custom && $("optRollHP").checked)
+      ? (rollFormula(e.data.hpDice) ?? e.hp) : e.hp;
+    const c = {
       id: uid(), seq: seq,
-      kind: "monster", src: name,
-      name: count > 1 || existing ? `${name} ${existing + i + 1}` : name,
-      ac: m.ac, initMod: m.initMod,
-      init: sep ? m.initMod + die(20) : shared,
-      hp, maxHp: hp, sub: `CR ${m.cr} · ${m.size} ${m.type}`
-    });
+      kind: "monster", src: key,
+      name: count > 1 || existing ? `${e.name} ${existing + i + 1}` : e.name,
+      ac: e.ac, initMod: e.initMod,
+      init: sep ? e.initMod + die(20) : shared,
+      hp, maxHp: hp, sub: e.sub
+    };
+    // Custom creatures carry a copy of their own details, so a fight in
+    // progress survives editing or deleting the bestiary entry behind it.
+    if (e.custom) c.snap = { ...e.data };
+    combatants.push(c);
   }
   persist(); render();
 }
@@ -470,7 +525,29 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt
 /* ---------- stat block ---------- */
 function showStatFor(id, reveal = true){
   const c = combatants.find(x => x.id === id);
-  if (c && c.kind === "monster") showStat(c.src, reveal, c.id === activeId ? c.name : null);
+  if (c && c.kind === "monster") paintStat(refFor(c), reveal, c.id === activeId ? c.name : null);
+}
+const refFor = c => c.snap ? { snap: c.snap } : { srd: c.src };
+
+function paintStat(ref, reveal = true, turnLabel = null){
+  shown = ref;
+  if (ref.srd) showStat(ref.srd, reveal, turnLabel);
+  else showCustom(ref.snap, reveal, turnLabel);
+}
+
+function showCustom(b, reveal, turnLabel){
+  $("sb").innerHTML = `
+    <h2>${esc(b.name)}</h2>
+    <p class="meta">Custom creature</p>
+    ${turnLabel ? `<p class="turnflag">${esc(turnLabel)} \u2014 taking its turn</p>` : ""}
+    <div class="rule"></div>
+    <p class="kv"><b>AC</b> ${b.ac} &nbsp; <b>Initiative</b> ${sign(b.initMod)} (${10 + b.initMod})</p>
+    <p class="kv"><b>HP</b> ${b.hp}</p>
+    ${b.notes ? `<div class="sec">Notes</div><p class="entry notes">${esc(b.notes)}</p>`
+              : `<div class="sec">Notes</div><p class="entry" style="color:var(--dim)">
+                   Nothing written down yet. Open the Bestiary to add notes for this creature.</p>`}`;
+  if (reveal) $("right").classList.add("open");
+  $("right").scrollTop = 0;
 }
 
 /* Follow the turn order: when a monster comes up, put its stat block on screen.
@@ -478,14 +555,13 @@ function showStatFor(id, reveal = true){
    everything, so there we update it quietly and let the DM open it. */
 function autoStat(){
   const c = combatants.find(x => x.id === activeId);
-  if (c && c.kind === "monster") showStat(c.src, window.innerWidth > 900, c.name);
-  else if (shown) showStat(shown, false, null);
+  if (c && c.kind === "monster") paintStat(refFor(c), window.innerWidth > 900, c.name);
+  else if (shown) paintStat(shown, false, null);
 }
 
 function showStat(name, reveal = true, turnLabel = null){
-  const m = byName[name];
+  const m = srdByName[name];
   if (!m) return;
-  shown = name;
   const ab = m.abilities;
   const cell = (k, label) => `<div><span>${label}</span><b>${ab[k][0]}</b><em>${sign(ab[k][1])} / ${sign(ab[k][2])}</em></div>`;
   const group = (title, arr) => !arr || !arr.length ? "" :
@@ -531,17 +607,20 @@ function runSearch(){
   const q = $("search").value.trim().toLowerCase();
   const box = $("acList");
   if (!q){ box.innerHTML = ""; acHits = []; acIndex = -1; return; }
-  acHits = monsters
-    .filter(m => m.name.toLowerCase().includes(q))
-    .sort((a, b) => a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q))
+  acHits = catalog
+    .filter(e => e.name.toLowerCase().includes(q))
+    .sort((a, b) =>
+      a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q) ||
+      (b.custom - a.custom) ||                       // the DM's own creatures first
+      a.name.localeCompare(b.name))
     .slice(0, 8);
   acIndex = acHits.length ? 0 : -1;
-  box.innerHTML = acHits.map((m, i) =>
-    `<div class="ac-item ${i === acIndex ? "on" : ""}" data-pick="${esc(m.name)}">
-       <span>${esc(m.name)}</span><small>CR ${esc(m.cr)} · AC ${m.ac} · ${m.hp} HP</small></div>`).join("");
+  box.innerHTML = acHits.map((e, i) =>
+    `<div class="ac-item ${i === acIndex ? "on" : ""}" data-pick="${esc(e.key)}">
+       <span>${esc(e.label)}</span><small>${esc(e.hint)}</small></div>`).join("");
 }
-function pick(name){
-  addMonster(name, Math.max(1, Math.min(24, +$("qty").value || 1)));
+function pick(key){
+  addMonster(key, Math.max(1, Math.min(24, +$("qty").value || 1)));
   $("search").value = ""; $("acList").innerHTML = ""; acHits = []; acIndex = -1;
   $("qty").value = 1;
   $("search").focus();
@@ -563,6 +642,55 @@ function drawRoster(){
     `<div class="pcrow"><span class="n">${esc(p.name)}</span>
        <span class="s">AC ${p.ac} · init ${sign(+p.init)}</span>
        <button class="btn quiet danger" data-pcdel="${i}">Remove</button></div>`).join("");
+}
+
+/* ---------- custom bestiary ---------- */
+let editing = null;                       // id of the entry being edited, or null
+
+function drawBestiary(){
+  const list = bestiary().slice().sort((a, b) => a.name.localeCompare(b.name));
+  $("bestList").innerHTML = list.length
+    ? list.map(b => `<div class="pcrow">
+         <span class="n">${esc(b.name)}</span>
+         <span class="s">AC ${b.ac} ${"\u00b7"} ${b.hp} HP ${"\u00b7"} init ${sign(b.initMod)}</span>
+         <button class="btn quiet" data-bedit="${b.id}">Edit</button>
+         <button class="btn quiet danger" data-bdel="${b.id}">Delete</button>
+       </div>`).join("")
+    : `<div class="pcrow"><span class="s">Empty so far. Anything you add here shows up
+         in the search box, tagged as custom.</span></div>`;
+}
+
+function bestForm(b){
+  editing = b ? b.id : null;
+  $("bName").value  = b ? b.name : "";
+  $("bAC").value    = b ? b.ac : 15;
+  $("bHP").value    = b ? b.hp : 10;
+  $("bInit").value  = b ? b.initMod : 0;
+  $("bNotes").value = b ? (b.notes || "") : "";
+  $("bSave").textContent = b ? "Save changes" : "Add to bestiary";
+  $("bCancel").hidden = !b;
+  $("bName").classList.toggle("editing", !!b);
+  $("bName").focus();
+}
+
+function bestSubmit(){
+  const name = $("bName").value.trim();
+  if (!name){ $("bName").focus(); return; }
+  const entry = {
+    id: editing || "b" + Date.now().toString(36) + rnd(4096).toString(36),
+    name,
+    ac: +$("bAC").value || 10,
+    hp: Math.max(1, +$("bHP").value || 1),
+    initMod: +$("bInit").value || 0,
+    notes: $("bNotes").value.trim()
+  };
+  const list = bestiary();
+  const i = list.findIndex(x => x.id === entry.id);
+  if (i === -1) list.push(entry); else list[i] = entry;
+  writeJSON(K_BEST, list);
+  buildCatalog();
+  bestForm(null);
+  drawBestiary();
 }
 
 /* ---------- saved encounters ---------- */
@@ -629,6 +757,25 @@ $("btnPrev").addEventListener("click", prevTurn);
 $("btnPC").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); $("pcName").focus(); });
 $("btnParty").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); });
 $("btnSave").addEventListener("click", () => { $("saveSheet").hidden = false; drawSaved(); });
+$("btnBest").addEventListener("click", () => {
+  $("bestSheet").hidden = false; bestForm(null); drawBestiary();
+});
+$("bSave").addEventListener("click", bestSubmit);
+$("bCancel").addEventListener("click", () => bestForm(null));
+$("bName").addEventListener("keydown", e => { if (e.key === "Enter") bestSubmit(); });
+$("bestList").addEventListener("click", e => {
+  const ed = e.target.dataset.bedit, del = e.target.dataset.bdel;
+  if (ed){
+    bestForm(bestiary().find(b => b.id === ed));
+  } else if (del){
+    const b = bestiary().find(x => x.id === del);
+    if (!b || !confirm(`Delete ${b.name} from the bestiary? Creatures already in this fight stay put.`)) return;
+    writeJSON(K_BEST, bestiary().filter(x => x.id !== del));
+    buildCatalog();
+    if (editing === del) bestForm(null);
+    drawBestiary();
+  }
+});
 $("btnClear").addEventListener("click", () => {
   if (!combatants.length || confirm("Clear everyone and reset to round 1?")){
     combatants = []; round = 0; activeId = null; persist(); render();
@@ -741,6 +888,7 @@ if (typeof SRD_META !== "undefined" && !SRD_META.complete){
     + `Replace srd-monsters.js with the full SRD set to search all of them.`;
 }
 seq = 0;
+buildCatalog();
 restore();
 render();
 autoStat();          // resuming mid-fight? show whoever's turn it is
