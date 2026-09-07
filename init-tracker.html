@@ -6,6 +6,7 @@
 <title>Initiative Tracker</title>
 <style>
 :root{
+  --sbw:50vw;
   --ink:#1A1815;
   --panel:#221F1B;
   --raised:#2B2721;
@@ -44,7 +45,10 @@ button{cursor:pointer;background:none;border:none}
 .btn{
   padding:7px 13px;border:1px solid var(--line);border-radius:5px;
   background:var(--raised);font-size:13px;
+  display:inline-block;text-decoration:none;color:inherit;
 }
+.home{color:var(--dim)}
+.home:hover{color:var(--text)}
 .btn:hover{border-color:var(--dim)}
 .btn.go{background:var(--brass);color:#241D0C;border-color:var(--brass);font-weight:600}
 .btn.go:hover{filter:brightness(1.08)}
@@ -52,9 +56,17 @@ button{cursor:pointer;background:none;border:none}
 .btn.danger:hover{border-color:var(--blood);color:var(--blood)}
 
 /* ---------- layout ---------- */
-.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:0}
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 7px var(--sbw);min-height:0}
 .left{display:flex;flex-direction:column;min-height:0;min-width:0}
-.right{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;min-height:0}
+.right{background:var(--panel);overflow-y:auto;min-height:0;min-width:0}
+.grip{
+  background:var(--line);cursor:col-resize;position:relative;
+  border:none;padding:0;border-radius:0;
+}
+.grip::after{content:"";position:absolute;top:0;bottom:0;left:-4px;right:-4px}
+.grip:hover,.grip.drag{background:var(--brass)}
+.grip:focus-visible{background:var(--brass);outline:none}
+body.resizing{user-select:none;cursor:col-resize}
 
 /* ---------- add controls ---------- */
 .add{padding:11px 14px;border-bottom:1px solid var(--line);flex:none}
@@ -137,6 +149,10 @@ button{cursor:pointer;background:none;border:none}
 .sb .hint{color:var(--dim);padding:40px 8px;text-align:center}
 .sb h2{font-size:21px;font-weight:600;line-height:1.2}
 .sb .meta{color:var(--dim);font-style:italic;font-size:12.5px;margin-top:2px}
+.turnflag{
+  display:inline-block;margin-top:8px;padding:2px 9px;border:1px solid var(--brass);
+  border-radius:99px;font-size:11px;font-weight:600;color:var(--brass);
+}
 .rule{height:1px;background:var(--brass);opacity:.5;margin:11px 0}
 .kv{margin:3px 0}
 .kv b{color:var(--brass);font-weight:600}
@@ -185,6 +201,7 @@ button{cursor:pointer;background:none;border:none}
 
 @media (max-width:900px){
   .main{grid-template-columns:1fr;grid-template-rows:1fr}
+  .grip{display:none}
   .right{
     position:fixed;inset:0;z-index:50;border-left:none;
     transform:translateX(100%);transition:transform .2s ease;
@@ -200,6 +217,7 @@ button{cursor:pointer;background:none;border:none}
 <body>
 
 <header class="bar">
+  <a class="btn quiet home" href="https://session-forge.github.io/dnd-tools/index.html">← Home</a>
   <span class="mark">INITIATIVE</span>
   <span class="round"><b id="roundNum">—</b><span>round</span></span>
   <span class="spacer"></span>
@@ -236,6 +254,10 @@ button{cursor:pointer;background:none;border:none}
       licensed under <a href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank" rel="noopener">CC BY 4.0</a>.
     </div>
   </div>
+
+  <div class="grip" id="grip" role="separator" aria-orientation="vertical" tabindex="0"
+       title="Drag to resize · double-click to reset"
+       aria-label="Resize the stat block panel"></div>
 
   <aside class="right" id="right">
     <button class="closesb" id="closeSB">← Back to initiative</button>
@@ -319,7 +341,7 @@ const K_ENC = "init.encounter", K_PARTY = "init.party", K_SAVED = "init.saved";
 let combatants = [];
 let round = 0;                 // 0 = not started
 let activeId = null;
-let selectedId = null;
+let shown = null;   // monster name currently in the side panel
 let seq = 0;
 const uid = () => "c" + (++seq) + Date.now().toString(36);
 
@@ -374,7 +396,7 @@ function nextTurn(){
     if (i === -1 || i === list.length - 1){ round++; activeId = list[0].id; }
     else activeId = list[i + 1].id;
   }
-  persist(); render(); scrollToActive();
+  persist(); render(); scrollToActive(); autoStat();
 }
 function prevTurn(){
   const list = ordered();
@@ -384,7 +406,7 @@ function prevTurn(){
     if (round === 1){ round = 0; activeId = null; }
     else { round--; activeId = list[list.length - 1].id; }
   } else activeId = list[i - 1].id;
-  persist(); render(); scrollToActive();
+  persist(); render(); scrollToActive(); autoStat();
 }
 function scrollToActive(){
   const el = document.querySelector(".c.active");
@@ -426,7 +448,7 @@ function render(){
     row.innerHTML = `
       <input class="init" type="number" value="${c.init}" data-init="${c.id}"
              title="Initiative — click to change" aria-label="Initiative for ${c.name}">
-      <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster" ? `data-show="${c.src}"` : ""}>
+      <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster" ? `data-show="${c.id}"` : ""}>
         <div class="cname">${esc(c.name)}</div>
         <div class="csub">${esc(c.sub)}</div>
       </div>
@@ -446,10 +468,24 @@ function render(){
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
 
 /* ---------- stat block ---------- */
-function showStat(name){
+function showStatFor(id, reveal = true){
+  const c = combatants.find(x => x.id === id);
+  if (c && c.kind === "monster") showStat(c.src, reveal, c.id === activeId ? c.name : null);
+}
+
+/* Follow the turn order: when a monster comes up, put its stat block on screen.
+   Only auto-reveal beside the list — on a narrow screen the panel covers
+   everything, so there we update it quietly and let the DM open it. */
+function autoStat(){
+  const c = combatants.find(x => x.id === activeId);
+  if (c && c.kind === "monster") showStat(c.src, window.innerWidth > 900, c.name);
+  else if (shown) showStat(shown, false, null);
+}
+
+function showStat(name, reveal = true, turnLabel = null){
   const m = byName[name];
   if (!m) return;
-  selectedId = name;
+  shown = name;
   const ab = m.abilities;
   const cell = (k, label) => `<div><span>${label}</span><b>${ab[k][0]}</b><em>${sign(ab[k][1])} / ${sign(ab[k][2])}</em></div>`;
   const group = (title, arr) => !arr || !arr.length ? "" :
@@ -460,6 +496,7 @@ function showStat(name){
   $("sb").innerHTML = `
     <h2>${esc(m.name)}</h2>
     <p class="meta">${esc(m.size)} ${esc(m.type)}${m.align ? ", " + esc(m.align) : ""}</p>
+    ${turnLabel ? `<p class="turnflag">${esc(turnLabel)} \u2014 taking its turn</p>` : ""}
     <div class="rule"></div>
     <p class="kv"><b>AC</b> ${m.ac} &nbsp; <b>Initiative</b> ${sign(m.initMod)} (${10 + m.initMod})</p>
     <p class="kv"><b>HP</b> ${m.hp}${m.hpDice ? ` (${esc(m.hpDice)})` : ""}</p>
@@ -472,9 +509,10 @@ function showStat(name){
     ${line("Resistances", m.resist)}
     ${line("Immunities", m.immune)}
     ${line("Vulnerabilities", m.vuln)}
+    ${line("Gear", m.gear)}
     ${line("Senses", m.senses)}
     ${line("Languages", m.langs)}
-    <p class="kv"><b>CR</b> ${esc(m.cr)} (XP ${m.xp}; PB ${sign(m.pb)})</p>
+    <p class="kv"><b>CR</b> ${esc(m.cr)} (${esc(m.crNote || `XP ${m.xp}; PB ${sign(m.pb)}`)})</p>
     ${group("Traits", m.traits)}
     ${group("Actions", m.actions)}
     ${group("Bonus Actions", m.bonus)}
@@ -482,7 +520,7 @@ function showStat(name){
     ${m.legendary && m.legendary.length ? `<div class="sec">Legendary Actions</div>
       ${m.legendaryNote ? `<p class="entry">${esc(m.legendaryNote)}</p>` : ""}
       ${m.legendary.map(e => `<p class="entry"><b>${esc(e.name)}.</b> ${esc(e.text)}</p>`).join("")}` : ""}`;
-  $("right").classList.add("open");
+  if (reveal) $("right").classList.add("open");
   $("right").scrollTop = 0;
 }
 const sign = n => (n >= 0 ? "+" : "") + n;
@@ -567,7 +605,7 @@ $("list").addEventListener("click", e => {
     persist(); render();
   } else {
     const w = t.closest("[data-show]");
-    if (w) showStat(w.dataset.show);
+    if (w) showStatFor(w.dataset.show);
   }
 });
 $("list").addEventListener("keydown", e => {
@@ -653,6 +691,48 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Escape"){ document.querySelectorAll(".sheet").forEach(s => s.hidden = true); }
 });
 
+/* ---------- resizable stat block ---------- */
+const K_WIDTH = "init.sbwidth";
+const clampW = px => Math.max(300, Math.min(Math.round(window.innerWidth * 0.72), px));
+function setWidth(px, save){
+  document.documentElement.style.setProperty("--sbw", clampW(px) + "px");
+  if (save) store.set(K_WIDTH, String(clampW(px)));
+}
+(function initWidth(){
+  const saved = parseInt(store.get(K_WIDTH), 10);
+  if (saved) setWidth(saved, false);
+})();
+window.addEventListener("resize", () => {
+  const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sbw"), 10);
+  if (cur) setWidth(cur, false);
+});
+
+const grip = $("grip");
+grip.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  grip.setPointerCapture(e.pointerId);
+  grip.classList.add("drag");
+  document.body.classList.add("resizing");
+});
+grip.addEventListener("pointermove", e => {
+  if (!grip.classList.contains("drag")) return;
+  setWidth(window.innerWidth - e.clientX, false);
+});
+grip.addEventListener("pointerup", e => {
+  if (!grip.classList.contains("drag")) return;
+  grip.releasePointerCapture(e.pointerId);
+  grip.classList.remove("drag");
+  document.body.classList.remove("resizing");
+  setWidth(window.innerWidth - e.clientX, true);
+});
+grip.addEventListener("dblclick", () => setWidth(window.innerWidth / 2, true));
+grip.addEventListener("keydown", e => {
+  const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sbw"), 10)
+              || window.innerWidth / 2;
+  if (e.key === "ArrowLeft"){ e.preventDefault(); setWidth(cur + 32, true); }
+  else if (e.key === "ArrowRight"){ e.preventDefault(); setWidth(cur - 32, true); }
+});
+
 /* ---------- boot ---------- */
 if (typeof SRD_META !== "undefined" && !SRD_META.complete){
   const n = $("notice");
@@ -663,6 +743,7 @@ if (typeof SRD_META !== "undefined" && !SRD_META.complete){
 seq = 0;
 restore();
 render();
+autoStat();          // resuming mid-fight? show whoever's turn it is
 $("search").focus();
 </script>
 </body>
