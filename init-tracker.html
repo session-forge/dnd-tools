@@ -47,7 +47,7 @@ button{cursor:pointer;background:none;border:none}
 /* ---------- top bar ---------- */
 .bar{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:8px 14px;background:var(--panel);
+  padding:8px 14px;background:var(--panel);position:relative;
   border-bottom:1px solid var(--line);flex:none;
 }
 .mark{font-weight:700;font-size:15px;color:var(--accent)}
@@ -233,7 +233,51 @@ body.resizing{user-select:none;cursor:col-resize}
 .foot{padding:9px 14px;font-size:10.5px;color:var(--dim);border-top:1px solid var(--line);flex:none}
 .foot a{color:var(--dim)}
 
+.help{width:30px;padding:7px 0;text-align:center;font-weight:700}
+/* Wide: the group is invisible as a box, so its buttons sit in the bar as
+   before. Narrow: it becomes a dropdown and the burger appears. */
+.group{display:contents}
+.more{display:none;font-size:15px;padding:6px 11px}
+
+/* ---------- guided tour ---------- */
+.tour{position:fixed;inset:0;z-index:80}
+.tour[hidden]{display:none!important}
+.tour-hole{
+  position:absolute;border-radius:7px;border:2px solid var(--accent);
+  box-shadow:0 0 0 9999px rgba(4,6,10,.76);pointer-events:none;
+  transition:top .18s ease,left .18s ease,width .18s ease,height .18s ease;
+}
+.tour-card{
+  position:absolute;width:290px;max-width:calc(100vw - 24px);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:14px 15px;box-shadow:0 18px 44px rgba(0,0,0,.55);
+}
+.tour-card h4{font-size:13.5px;color:var(--accent);margin-bottom:4px}
+.tour-card p{font-size:13px;line-height:1.5}
+.tour-card kbd{
+  font:inherit;font-size:11.5px;background:var(--raised);
+  border:1px solid var(--line);border-radius:3px;padding:0 4px;
+}
+.tour-nav{display:flex;align-items:center;gap:8px;margin-top:13px}
+.tour-nav .count{flex:1;font-size:11.5px;color:var(--dim)}
+.tour-nav .btn{padding:5px 11px;font-size:12.5px}
+.tour-arrow{
+  position:absolute;width:12px;height:12px;background:var(--panel);
+  border-left:1px solid var(--line);border-top:1px solid var(--line);
+  transform:rotate(45deg);
+}
+
 @media (max-width:900px){
+  .more{display:inline-block}
+  .group{
+    display:none;position:absolute;top:calc(100% + 6px);right:12px;z-index:70;
+    flex-direction:column;gap:6px;padding:8px;min-width:172px;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 16px 36px rgba(0,0,0,.5);
+  }
+  .group.open{display:flex}
+  .group .btn{text-align:left;background:var(--raised)}
+
   .main{grid-template-columns:1fr;grid-template-rows:1fr}
   .grip{display:none}
   .right{
@@ -255,11 +299,16 @@ body.resizing{user-select:none;cursor:col-resize}
   <span class="mark">Initiative Tracker</span>
   <span class="round"><span>Round</span><b id="roundNum">—</b></span>
   <span class="spacer"></span>
+  <button class="btn quiet help" id="btnHelp" title="How this works" aria-label="Help">?</button>
   <select id="theme" title="Theme" aria-label="Theme"></select>
-  <button class="btn quiet" id="btnParty">Party</button>
-  <button class="btn quiet" id="btnBest">Bestiary</button>
-  <button class="btn quiet" id="btnSave">Encounters</button>
-  <button class="btn quiet danger" id="btnClear">Clear</button>
+  <button class="btn quiet more" id="btnMore" aria-expanded="false"
+          aria-controls="barMenu" aria-label="More options">☰</button>
+  <div class="group" id="barMenu">
+    <button class="btn quiet" id="btnParty">Party</button>
+    <button class="btn quiet" id="btnBest">Bestiary</button>
+    <button class="btn quiet" id="btnSave">Encounters</button>
+    <button class="btn quiet danger" id="btnClear">Clear</button>
+  </div>
   <button class="btn" id="btnPrev">Back</button>
   <button class="btn go" id="btnNext">Start combat</button>
 </header>
@@ -299,6 +348,21 @@ body.resizing{user-select:none;cursor:col-resize}
     <button class="closesb" id="closeSB">← Back to initiative</button>
     <div class="sb" id="sb"><p class="hint">Pick a monster from the list to read its stat block.</p></div>
   </aside>
+</div>
+
+<!-- guided tour -->
+<div class="tour" id="tour" hidden>
+  <div class="tour-hole" id="tourHole"></div>
+  <div class="tour-card" id="tourCard">
+    <div class="tour-arrow" id="tourArrow"></div>
+    <h4 id="tourTitle"></h4>
+    <p id="tourText"></p>
+    <div class="tour-nav">
+      <span class="count" id="tourCount"></span>
+      <button class="btn" id="tourBack">Back</button>
+      <button class="btn go" id="tourNext">Next</button>
+    </div>
+  </div>
 </div>
 
 <!-- player / party -->
@@ -859,12 +923,153 @@ $("encDel").addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", e => {
+  if (!$("tour").hidden){
+    if (e.key === "ArrowRight" || e.key === "Enter"){ e.preventDefault(); stepTour(1); }
+    else if (e.key === "ArrowLeft"){ e.preventDefault(); stepTour(-1); }
+    else if (e.key === "Escape") closeTour();
+    return;
+  }
   if (e.target.matches("input, select, textarea")) return;
   if (e.key === "/"){ e.preventDefault(); $("search").focus(); }
   else if (e.key === "n"){ nextTurn(); }
   else if (e.key === "p"){ prevTurn(); }
-  else if (e.key === "Escape"){ document.querySelectorAll(".sheet").forEach(s => s.hidden = true); }
+  else if (e.key === "Escape"){
+    document.querySelectorAll(".sheet").forEach(s => s.hidden = true);
+    setMenu(false);
+  }
 });
+
+/* ---------- guided tour ----------
+   Steps whose target isn't on screen are dropped automatically, so the
+   walkthrough stays honest on a narrow window or an empty encounter. */
+const TOUR = [
+  { sel: "#search", title: "Find a monster",
+    t: "Type any part of a name and press Enter. All 330 creatures from the SRD are here, plus anything you've added yourself." },
+  { sel: "#qty", title: "How many",
+    t: "Set this before you add. Four goblins arrive numbered 1 to 4, sharing one initiative — and if you need two more later, they join the same count." },
+  { sel: "#btnPC", title: "Your party",
+    t: "Save each character once with their AC. After that it's one click to drop the whole party into a fight." },
+  { sel: "#btnBest", title: "Your own creatures", wide: true,
+    t: "Homebrew, NPCs, or anything from a book. Give it a name, AC, HP and notes, and it turns up in the search box tagged as custom." },
+  { sel: "#list .c:first-child .init", title: "Initiative",
+    t: "Click any number to change it and the order re-sorts straight away. Players roll their own, so type what they call out." },
+  { sel: "#list .c:first-child .ac", title: "Armour Class",
+    t: "Always on screen for everyone in the fight, so you never have to go looking for it mid-turn." },
+  { sel: "#list .c:first-child .hp", title: "Damage and healing",
+    t: "Type a number, then \u2212 to subtract it or + to heal. <kbd>Enter</kbd> damages, <kbd>Shift</kbd>+<kbd>Enter</kbd> heals. HP turns red at half." },
+  { sel: "#list .c:first-child .who", title: "Open a stat block",
+    t: "Click a monster's name to read its full entry on the right." },
+  { sel: "#right", title: "The stat block", wide: true,
+    t: "This follows the turn order on its own \u2014 when a monster comes up, its stat block is already here. Drag the left edge to resize it, or double-click that edge to reset." },
+  { sel: "#btnNext", title: "Run the fight",
+    t: "Advances to the next creature and ticks the round over at the end. <kbd>n</kbd> for next, <kbd>p</kbd> for back, <kbd>/</kbd> to jump to search." },
+  { sel: "#btnSave", title: "Encounters", wide: true,
+    t: "The current fight saves by itself, so a stray refresh costs you nothing. Name it here to keep a copy you can reload." },
+  { sel: "#btnClear", title: "Start over", wide: true,
+    t: "Clears everyone out and resets to round one. Your party, bestiary and saved encounters are untouched." },
+  { sel: "#btnMore", title: "Everything else", narrow: true,
+    t: "<b>Party</b> saves your characters so you can load them each session. <b>Bestiary</b> holds your own creatures. <b>Encounters</b> saves and reloads a fight. <b>Clear</b> wipes the board and resets to round one." },
+  { sel: "#theme", title: "Themes",
+    t: "Four colour schemes, including a light one. Your choice is remembered." },
+];
+
+let tourAt = 0, tourList = [], tourDemo = false;
+
+function openTour(){
+  // With an empty list there are no rows to point at, so stand one up.
+  if (!combatants.length && byKey["Goblin Warrior"]){
+    const e = byKey["Goblin Warrior"];
+    combatants.push({ id: "__demo", seq: -1, kind: "monster", src: e.key,
+      name: e.name, ac: e.ac, initMod: e.initMod, init: 10 + e.initMod,
+      hp: e.hp, maxHp: e.hp, sub: e.sub });
+    tourDemo = true;
+    render();
+  }
+  tourList = TOUR.filter(s => {
+    if (s.wide && window.innerWidth <= 900) return false;
+    if (s.narrow && window.innerWidth > 900) return false;
+    const el = document.querySelector(s.sel);
+    // A hidden target measures zero and would spotlight empty space.
+    return !!el && el.getBoundingClientRect().width > 0;
+  });
+  if (!tourList.length) return;
+  tourAt = 0;
+  $("tour").hidden = false;
+  drawTour();
+  window.addEventListener("resize", drawTour);
+}
+
+function closeTour(){
+  $("tour").hidden = true;
+  setMenu(false);
+  window.removeEventListener("resize", drawTour);
+  if (tourDemo){                       // never persisted, so nothing to undo
+    combatants = combatants.filter(c => c.id !== "__demo");
+    tourDemo = false;
+    render();
+  }
+}
+
+function drawTour(){
+  const step = tourList[tourAt];
+  const el = document.querySelector(step.sel);
+  if (!el) return closeTour();
+  el.scrollIntoView({ block: "nearest" });
+
+  const r = el.getBoundingClientRect(), pad = 6;
+  const hole = $("tourHole");
+  hole.style.left   = (r.left - pad) + "px";
+  hole.style.top    = (r.top - pad) + "px";
+  hole.style.width  = (r.width + pad * 2) + "px";
+  hole.style.height = (r.height + pad * 2) + "px";
+
+  $("tourTitle").textContent = step.title;
+  $("tourText").innerHTML = step.t;
+  $("tourCount").textContent = `${tourAt + 1} of ${tourList.length}`;
+  $("tourBack").disabled = tourAt === 0;
+  $("tourBack").style.opacity = tourAt === 0 ? .4 : 1;
+  $("tourNext").textContent = tourAt === tourList.length - 1 ? "Done" : "Next";
+
+  const card = $("tourCard"), cw = card.offsetWidth, ch = card.offsetHeight;
+  const below = r.bottom + 14 + ch < window.innerHeight - 12;
+  const top = below ? r.bottom + 14 : Math.max(12, r.top - ch - 14);
+  const left = Math.max(12, Math.min(window.innerWidth - cw - 12,
+                                     r.left + r.width / 2 - cw / 2));
+  card.style.top = top + "px";
+  card.style.left = left + "px";
+
+  const arrow = $("tourArrow");
+  arrow.style.left = Math.max(14, Math.min(cw - 26,
+                              r.left + r.width / 2 - left - 6)) + "px";
+  arrow.style.top = below ? "-7px" : (ch - 6) + "px";
+  arrow.style.transform = below ? "rotate(45deg)" : "rotate(225deg)";
+}
+
+function stepTour(d){
+  const next = tourAt + d;
+  if (next < 0) return;
+  if (next >= tourList.length) return closeTour();
+  tourAt = next; drawTour();
+}
+
+function setMenu(open){
+  $("barMenu").classList.toggle("open", open);
+  $("btnMore").setAttribute("aria-expanded", open ? "true" : "false");
+}
+$("btnMore").addEventListener("click", e => {
+  e.stopPropagation();
+  setMenu(!$("barMenu").classList.contains("open"));
+});
+// picking anything in the menu opens a panel, so fold the menu away
+$("barMenu").addEventListener("click", () => setMenu(false));
+document.addEventListener("click", e => {
+  if (!e.target.closest("#barMenu, #btnMore")) setMenu(false);
+});
+
+$("btnHelp").addEventListener("click", openTour);
+$("tourNext").addEventListener("click", () => stepTour(1));
+$("tourBack").addEventListener("click", () => stepTour(-1));
+$("tour").addEventListener("click", e => { if (e.target.id === "tour") closeTour(); });
 
 /* ---------- themes ----------
    Each theme restates the whole surface ladder, so the base colour of the
