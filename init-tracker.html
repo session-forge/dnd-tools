@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Initiative Tracker</title>
+<style>
+:root{
+  --ink:#1A1815;
+  --panel:#221F1B;
+  --raised:#2B2721;
+  --line:#3A342C;
+  --text:#EFE7D7;
+  --dim:#9E9384;
+  --brass:#D9A93E;
+  --blood:#B2402F;
+  --steel:#7E9BAE;
+  --row:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--ink); color:var(--text);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px; line-height:1.45;
+  font-variant-numeric:tabular-nums;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;font-variant-numeric:tabular-nums}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* ---------- top bar ---------- */
+.bar{
+  display:flex;align-items:center;gap:14px;
+  padding:8px 14px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex:none;
+}
+.mark{font-weight:700;letter-spacing:.06em;font-size:13px;color:var(--brass)}
+.round{display:flex;align-items:baseline;gap:7px;margin-left:4px}
+.round b{font-size:22px;font-weight:600;line-height:1}
+.round span{color:var(--dim);font-size:12px}
+.bar .spacer{flex:1}
+.btn{
+  padding:7px 13px;border:1px solid var(--line);border-radius:5px;
+  background:var(--raised);font-size:13px;
+}
+.btn:hover{border-color:var(--dim)}
+.btn.go{background:var(--brass);color:#241D0C;border-color:var(--brass);font-weight:600}
+.btn.go:hover{filter:brightness(1.08)}
+.btn.quiet{background:none}
+.btn.danger:hover{border-color:var(--blood);color:var(--blood)}
+
+/* ---------- layout ---------- */
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:0}
+.left{display:flex;flex-direction:column;min-height:0;min-width:0}
+.right{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;min-height:0}
+
+/* ---------- add controls ---------- */
+.add{padding:11px 14px;border-bottom:1px solid var(--line);flex:none}
+.addrow{display:flex;gap:8px;align-items:stretch}
+.field{position:relative;flex:1;min-width:0}
+.field input{
+  width:100%;padding:9px 11px;background:var(--raised);
+  border:1px solid var(--line);border-radius:5px;
+}
+.field input::placeholder{color:var(--dim)}
+.field input:focus{border-color:var(--brass);outline:none}
+.qty{width:60px;padding:9px 8px;background:var(--raised);border:1px solid var(--line);border-radius:5px;text-align:center}
+.opts{display:flex;gap:16px;margin-top:9px;font-size:12px;color:var(--dim)}
+.opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.opts input{accent-color:var(--brass)}
+
+.ac-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;
+  background:var(--raised);border:1px solid var(--line);border-radius:6px;
+  box-shadow:0 12px 28px rgba(0,0,0,.55);max-height:290px;overflow-y:auto;
+}
+.ac-list:empty{display:none}
+.ac-item{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;cursor:pointer}
+.ac-item + .ac-item{border-top:1px solid var(--line)}
+.ac-item.on{background:#332E26}
+.ac-item small{color:var(--dim);white-space:nowrap}
+
+/* ---------- initiative list ---------- */
+.list{flex:1;overflow-y:auto;min-height:0}
+.empty{padding:44px 24px;text-align:center;color:var(--dim);max-width:34ch;margin:0 auto}
+.empty b{display:block;color:var(--text);font-weight:600;margin-bottom:6px}
+
+.c{
+  display:flex;align-items:center;gap:11px;
+  min-height:var(--row);padding:5px 14px 5px 11px;
+  border-bottom:1px solid var(--line);border-left:3px solid transparent;
+}
+.c:hover{background:#26221D}
+.c.active{border-left-color:var(--brass);background:#2E281E}
+.c.active .cname{color:var(--brass)}
+.c.down{opacity:.42}
+.c.down .cname{text-decoration:line-through}
+
+.init{
+  width:46px;flex:none;text-align:center;font-size:18px;font-weight:600;
+  background:none;border:1px solid transparent;border-radius:4px;padding:3px 0;
+}
+.init:hover{border-color:var(--line)}
+.init:focus{border-color:var(--brass);background:var(--ink);outline:none}
+.init::-webkit-outer-spin-button,.init::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.init{-moz-appearance:textfield}
+
+.who{flex:1;min-width:0;cursor:pointer}
+.cname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.csub{font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who.static{cursor:default}
+
+.ac{
+  flex:none;display:flex;flex-direction:column;align-items:center;
+  min-width:44px;padding:2px 6px;border:1px solid var(--line);border-radius:5px;
+}
+.ac b{font-size:16px;font-weight:600;line-height:1.1;color:var(--steel)}
+.ac span{font-size:9.5px;color:var(--dim);letter-spacing:.05em}
+
+.hp{flex:none;display:flex;align-items:center;gap:6px}
+.hpnum{min-width:64px;text-align:right;font-size:15px;font-weight:600}
+.hpnum small{color:var(--dim);font-weight:400;font-size:12px}
+.hpnum.bloodied{color:var(--blood)}
+.dmg{width:44px;padding:6px 4px;text-align:center;background:var(--ink);border:1px solid var(--line);border-radius:4px}
+.dmg:focus{border-color:var(--brass);outline:none}
+.hpbtn{width:26px;height:28px;border:1px solid var(--line);border-radius:4px;font-size:15px;line-height:1}
+.hpbtn.minus:hover{border-color:var(--blood);color:var(--blood)}
+.hpbtn.plus:hover{border-color:var(--steel);color:var(--steel)}
+.kill{flex:none;width:26px;color:var(--dim);font-size:16px}
+.kill:hover{color:var(--blood)}
+.pcdash{min-width:64px;text-align:right;color:var(--dim)}
+
+/* ---------- stat block ---------- */
+.sb{padding:16px 18px 40px}
+.sb .hint{color:var(--dim);padding:40px 8px;text-align:center}
+.sb h2{font-size:21px;font-weight:600;line-height:1.2}
+.sb .meta{color:var(--dim);font-style:italic;font-size:12.5px;margin-top:2px}
+.rule{height:1px;background:var(--brass);opacity:.5;margin:11px 0}
+.kv{margin:3px 0}
+.kv b{color:var(--brass);font-weight:600}
+.abil{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin:11px 0}
+.abil div{background:var(--panel);padding:6px 2px;text-align:center}
+.abil span{display:block;font-size:9.5px;color:var(--dim);letter-spacing:.06em}
+.abil b{font-size:15px;font-weight:600}
+.abil em{display:block;font-size:10.5px;color:var(--dim);font-style:normal}
+.sec{margin-top:14px;font-size:13px;font-weight:600;color:var(--brass);border-bottom:1px solid var(--line);padding-bottom:3px}
+.entry{margin-top:8px}
+.entry b{font-style:italic}
+
+/* ---------- side panels ---------- */
+.sheet{
+  position:fixed;inset:0;background:rgba(12,10,8,.7);z-index:60;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.sheet[hidden]{display:none}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  width:100%;max-width:420px;max-height:82vh;overflow-y:auto;padding:18px;
+}
+.card h3{font-size:16px;font-weight:600;margin-bottom:3px}
+.card p.sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
+.card label{display:block;font-size:12px;color:var(--dim);margin:9px 0 3px}
+.card input,.card select{width:100%;padding:8px 10px;background:var(--raised);border:1px solid var(--line);border-radius:5px}
+.card input:focus,.card select:focus{border-color:var(--brass);outline:none}
+.trio{display:grid;grid-template-columns:1fr 76px 76px;gap:8px}
+.acts{display:flex;gap:8px;margin-top:16px}
+.acts .btn{flex:1;text-align:center}
+.roster{border:1px solid var(--line);border-radius:6px;margin-top:12px}
+.roster:empty{display:none}
+.pcrow{display:flex;align-items:center;gap:10px;padding:8px 11px}
+.pcrow + .pcrow{border-top:1px solid var(--line)}
+.pcrow .n{flex:1;font-weight:600}
+.pcrow .s{color:var(--dim);font-size:12px}
+.savedrow{display:flex;gap:8px;margin-top:8px}
+.savedrow select{flex:1}
+
+.notice{
+  padding:7px 14px;background:#332A16;border-bottom:1px solid var(--line);
+  font-size:12px;color:#E4C97E;flex:none;
+}
+.foot{padding:9px 14px;font-size:10.5px;color:#6B6355;border-top:1px solid var(--line);flex:none}
+.foot a{color:#7E7466}
+
+@media (max-width:900px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr}
+  .right{
+    position:fixed;inset:0;z-index:50;border-left:none;
+    transform:translateX(100%);transition:transform .2s ease;
+  }
+  .right.open{transform:none}
+  .closesb{position:sticky;top:0;display:block;width:100%;padding:11px;
+    background:var(--raised);border-bottom:1px solid var(--line);text-align:left;font-weight:600}
+}
+@media (min-width:901px){.closesb{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <span class="mark">INITIATIVE</span>
+  <span class="round"><b id="roundNum">—</b><span>round</span></span>
+  <span class="spacer"></span>
+  <button class="btn quiet" id="btnParty">Party</button>
+  <button class="btn quiet" id="btnSave">Encounters</button>
+  <button class="btn quiet danger" id="btnClear">Clear</button>
+  <button class="btn" id="btnPrev">Back</button>
+  <button class="btn go" id="btnNext">Start combat</button>
+</header>
+
+<div class="notice" id="notice" hidden></div>
+
+<div class="main">
+  <div class="left">
+    <div class="add">
+      <div class="addrow">
+        <div class="field">
+          <input id="search" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Search monsters — type a name, press Enter to add">
+          <div class="ac-list" id="acList"></div>
+        </div>
+        <input class="qty" id="qty" type="number" min="1" max="24" value="1" title="How many">
+        <button class="btn" id="btnPC">Add player</button>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" id="optRollHP"> Roll HP instead of average</label>
+        <label><input type="checkbox" id="optSepInit"> Roll initiative separately for each</label>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+    <div class="foot">
+      Monster data from the System Reference Document 5.2.1 by Wizards of the Coast LLC,
+      licensed under <a href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank" rel="noopener">CC BY 4.0</a>.
+    </div>
+  </div>
+
+  <aside class="right" id="right">
+    <button class="closesb" id="closeSB">← Back to initiative</button>
+    <div class="sb" id="sb"><p class="hint">Pick a monster from the list to read its stat block.</p></div>
+  </aside>
+</div>
+
+<!-- player / party -->
+<div class="sheet" id="partySheet" hidden>
+  <div class="card">
+    <h3>Party roster</h3>
+    <p class="sub">Saved on this computer. Add everyone once, then load them each session.</p>
+    <div class="trio">
+      <div><label for="pcName">Character</label><input id="pcName" placeholder="Thorn"></div>
+      <div><label for="pcAC">AC</label><input id="pcAC" type="number" value="15"></div>
+      <div><label for="pcInit">Init bonus</label><input id="pcInit" type="number" value="2"></div>
+    </div>
+    <div class="acts">
+      <button class="btn" id="pcAdd">Save to roster</button>
+      <button class="btn go" id="pcLoadAll">Add roster to combat</button>
+    </div>
+    <div class="roster" id="roster"></div>
+    <div class="acts"><button class="btn quiet" data-close>Close</button></div>
+  </div>
+</div>
+
+<!-- saved encounters -->
+<div class="sheet" id="saveSheet" hidden>
+  <div class="card">
+    <h3>Saved encounters</h3>
+    <p class="sub">Your current fight is saved automatically. Name it to keep a copy.</p>
+    <label for="encName">Save this encounter as</label>
+    <input id="encName" placeholder="Goblin ambush">
+    <div class="acts"><button class="btn go" id="encSave">Save encounter</button></div>
+    <label for="encPick">Load a saved encounter</label>
+    <div class="savedrow">
+      <select id="encPick"></select>
+      <button class="btn" id="encLoad">Load</button>
+      <button class="btn danger" id="encDel">Delete</button>
+    </div>
+    <div class="acts"><button class="btn quiet" data-close>Close</button></div>
+  </div>
+</div>
+
+<script src="srd-monsters.js"></script>
+<script>
+/* ---------- random ---------- */
+function rnd(max){                       // uniform 0..max-1, no modulo bias
+  const lim = Math.floor(4294967296 / max) * max;
+  const a = new Uint32Array(1);
+  let v;
+  do { crypto.getRandomValues(a); v = a[0]; } while (v >= lim);
+  return v % max;
+}
+const die = s => rnd(s) + 1;
+function rollDice(n, s){ let t = 0; for (let i = 0; i < n; i++) t += die(s); return t; }
+function rollFormula(f){                 // "8d10+24" -> number
+  const m = /^\s*(\d+)d(\d+)\s*([+-]\s*\d+)?\s*$/.exec(f || "");
+  if (!m) return null;
+  const mod = m[3] ? parseInt(m[3].replace(/\s+/g, ""), 10) : 0;
+  return Math.max(1, rollDice(+m[1], +m[2]) + mod);
+}
+
+/* ---------- storage (falls back to memory if blocked) ---------- */
+const store = (() => {
+  const mem = {};
+  let live = true;
+  try { localStorage.setItem("__t", "1"); localStorage.removeItem("__t"); }
+  catch (e) { live = false; }
+  return {
+    get(k){ try { return live ? localStorage.getItem(k) : mem[k] ?? null; } catch(e){ return mem[k] ?? null; } },
+    set(k,v){ try { live ? localStorage.setItem(k,v) : mem[k] = v; } catch(e){ mem[k] = v; } }
+  };
+})();
+const readJSON  = (k, d) => { try { return JSON.parse(store.get(k)) ?? d; } catch(e){ return d; } };
+const writeJSON = (k, v) => store.set(k, JSON.stringify(v));
+
+const K_ENC = "init.encounter", K_PARTY = "init.party", K_SAVED = "init.saved";
+
+/* ---------- state ---------- */
+let combatants = [];
+let round = 0;                 // 0 = not started
+let activeId = null;
+let selectedId = null;
+let seq = 0;
+const uid = () => "c" + (++seq) + Date.now().toString(36);
+
+const monsters = (typeof SRD_MONSTERS !== "undefined" ? SRD_MONSTERS : [])
+  .slice().sort((a, b) => a.name.localeCompare(b.name));
+const byName = Object.fromEntries(monsters.map(m => [m.name, m]));
+
+const $ = id => document.getElementById(id);
+
+/* ---------- ordering ---------- */
+function ordered(){
+  return combatants.slice().sort((a, b) =>
+    (b.init - a.init) || (b.initMod - a.initMod) || (a.seq - b.seq));
+}
+
+/* ---------- adding ---------- */
+function addMonster(name, count){
+  const m = byName[name];
+  if (!m) return;
+  const sep = $("optSepInit").checked;
+  const shared = m.initMod + die(20);
+  const existing = combatants.filter(c => c.src === name).length;
+
+  for (let i = 0; i < count; i++){
+    const hp = $("optRollHP").checked ? (rollFormula(m.hpDice) ?? m.hp) : m.hp;
+    combatants.push({
+      id: uid(), seq: seq,
+      kind: "monster", src: name,
+      name: count > 1 || existing ? `${name} ${existing + i + 1}` : name,
+      ac: m.ac, initMod: m.initMod,
+      init: sep ? m.initMod + die(20) : shared,
+      hp, maxHp: hp, sub: `CR ${m.cr} · ${m.size} ${m.type}`
+    });
+  }
+  persist(); render();
+}
+
+function addPC(pc){
+  combatants.push({
+    id: uid(), seq: seq, kind: "pc", name: pc.name,
+    ac: +pc.ac || 10, initMod: +pc.init || 0, init: 0, sub: "Player character"
+  });
+}
+
+/* ---------- turns ---------- */
+function nextTurn(){
+  const list = ordered();
+  if (!list.length) return;
+  if (!round){ round = 1; activeId = list[0].id; }
+  else {
+    const i = list.findIndex(c => c.id === activeId);
+    if (i === -1 || i === list.length - 1){ round++; activeId = list[0].id; }
+    else activeId = list[i + 1].id;
+  }
+  persist(); render(); scrollToActive();
+}
+function prevTurn(){
+  const list = ordered();
+  if (!list.length || !round) return;
+  const i = list.findIndex(c => c.id === activeId);
+  if (i <= 0){
+    if (round === 1){ round = 0; activeId = null; }
+    else { round--; activeId = list[list.length - 1].id; }
+  } else activeId = list[i - 1].id;
+  persist(); render(); scrollToActive();
+}
+function scrollToActive(){
+  const el = document.querySelector(".c.active");
+  if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+/* ---------- hp ---------- */
+function applyHP(id, delta){
+  const c = combatants.find(x => x.id === id);
+  if (!c || c.kind !== "monster") return;
+  c.hp = Math.max(0, Math.min(c.maxHp, c.hp + delta));
+  persist(); render();
+}
+
+/* ---------- render ---------- */
+function render(){
+  $("roundNum").textContent = round || "—";
+  $("btnNext").textContent = round ? "Next turn" : "Start combat";
+  $("btnPrev").disabled = !round;
+  $("btnPrev").style.opacity = round ? 1 : .4;
+
+  const list = ordered();
+  const box = $("list");
+
+  if (!list.length){
+    box.innerHTML = `<div class="empty"><b>Nobody in the fight yet.</b>
+      Search a monster above to add it, or use <em>Add player</em> for the party.</div>`;
+    return;
+  }
+
+  box.innerHTML = "";
+  for (const c of list){
+    const row = document.createElement("div");
+    row.className = "c" + (c.id === activeId ? " active" : "")
+                       + (c.kind === "monster" && c.hp === 0 ? " down" : "");
+
+    const bloodied = c.kind === "monster" && c.hp > 0 && c.hp <= c.maxHp / 2;
+
+    row.innerHTML = `
+      <input class="init" type="number" value="${c.init}" data-init="${c.id}"
+             title="Initiative — click to change" aria-label="Initiative for ${c.name}">
+      <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster" ? `data-show="${c.src}"` : ""}>
+        <div class="cname">${esc(c.name)}</div>
+        <div class="csub">${esc(c.sub)}</div>
+      </div>
+      <div class="ac"><b>${c.ac}</b><span>AC</span></div>
+      ${c.kind === "monster" ? `
+        <div class="hp">
+          <div class="hpnum ${bloodied ? "bloodied" : ""}">${c.hp}<small> / ${c.maxHp}</small></div>
+          <input class="dmg" type="number" min="0" data-amt="${c.id}" placeholder="0"
+                 aria-label="Amount of damage or healing for ${c.name}">
+          <button class="hpbtn minus" data-hurt="${c.id}" title="Apply damage">−</button>
+          <button class="hpbtn plus"  data-heal="${c.id}" title="Heal">+</button>
+        </div>` : `<div class="pcdash">—</div>`}
+      <button class="kill" data-rm="${c.id}" title="Remove from combat" aria-label="Remove ${c.name}">×</button>`;
+    box.appendChild(row);
+  }
+}
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
+
+/* ---------- stat block ---------- */
+function showStat(name){
+  const m = byName[name];
+  if (!m) return;
+  selectedId = name;
+  const ab = m.abilities;
+  const cell = (k, label) => `<div><span>${label}</span><b>${ab[k][0]}</b><em>${sign(ab[k][1])} / ${sign(ab[k][2])}</em></div>`;
+  const group = (title, arr) => !arr || !arr.length ? "" :
+    `<div class="sec">${title}</div>` + arr.map(e =>
+      `<p class="entry"><b>${esc(e.name)}.</b> ${esc(e.text)}</p>`).join("");
+  const line = (label, val) => val ? `<p class="kv"><b>${label}</b> ${esc(val)}</p>` : "";
+
+  $("sb").innerHTML = `
+    <h2>${esc(m.name)}</h2>
+    <p class="meta">${esc(m.size)} ${esc(m.type)}${m.align ? ", " + esc(m.align) : ""}</p>
+    <div class="rule"></div>
+    <p class="kv"><b>AC</b> ${m.ac} &nbsp; <b>Initiative</b> ${sign(m.initMod)} (${10 + m.initMod})</p>
+    <p class="kv"><b>HP</b> ${m.hp}${m.hpDice ? ` (${esc(m.hpDice)})` : ""}</p>
+    <p class="kv"><b>Speed</b> ${esc(m.speed)}</p>
+    <div class="abil">
+      ${cell("str","STR")}${cell("dex","DEX")}${cell("con","CON")}
+      ${cell("int","INT")}${cell("wis","WIS")}${cell("cha","CHA")}
+    </div>
+    ${line("Skills", m.skills)}
+    ${line("Resistances", m.resist)}
+    ${line("Immunities", m.immune)}
+    ${line("Vulnerabilities", m.vuln)}
+    ${line("Senses", m.senses)}
+    ${line("Languages", m.langs)}
+    <p class="kv"><b>CR</b> ${esc(m.cr)} (XP ${m.xp}; PB ${sign(m.pb)})</p>
+    ${group("Traits", m.traits)}
+    ${group("Actions", m.actions)}
+    ${group("Bonus Actions", m.bonus)}
+    ${group("Reactions", m.reactions)}
+    ${m.legendary && m.legendary.length ? `<div class="sec">Legendary Actions</div>
+      ${m.legendaryNote ? `<p class="entry">${esc(m.legendaryNote)}</p>` : ""}
+      ${m.legendary.map(e => `<p class="entry"><b>${esc(e.name)}.</b> ${esc(e.text)}</p>`).join("")}` : ""}`;
+  $("right").classList.add("open");
+  $("right").scrollTop = 0;
+}
+const sign = n => (n >= 0 ? "+" : "") + n;
+
+/* ---------- autocomplete ---------- */
+let acIndex = -1, acHits = [];
+function runSearch(){
+  const q = $("search").value.trim().toLowerCase();
+  const box = $("acList");
+  if (!q){ box.innerHTML = ""; acHits = []; acIndex = -1; return; }
+  acHits = monsters
+    .filter(m => m.name.toLowerCase().includes(q))
+    .sort((a, b) => a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q))
+    .slice(0, 8);
+  acIndex = acHits.length ? 0 : -1;
+  box.innerHTML = acHits.map((m, i) =>
+    `<div class="ac-item ${i === acIndex ? "on" : ""}" data-pick="${esc(m.name)}">
+       <span>${esc(m.name)}</span><small>CR ${esc(m.cr)} · AC ${m.ac} · ${m.hp} HP</small></div>`).join("");
+}
+function pick(name){
+  addMonster(name, Math.max(1, Math.min(24, +$("qty").value || 1)));
+  $("search").value = ""; $("acList").innerHTML = ""; acHits = []; acIndex = -1;
+  $("qty").value = 1;
+  $("search").focus();
+}
+
+/* ---------- persistence ---------- */
+function persist(){ writeJSON(K_ENC, { combatants, round, activeId, seq }); }
+function restore(){
+  const d = readJSON(K_ENC, null);
+  if (!d) return;
+  combatants = d.combatants || []; round = d.round || 0;
+  activeId = d.activeId || null; seq = d.seq || combatants.length;
+}
+
+/* ---------- party ---------- */
+function drawRoster(){
+  const party = readJSON(K_PARTY, []);
+  $("roster").innerHTML = party.map((p, i) =>
+    `<div class="pcrow"><span class="n">${esc(p.name)}</span>
+       <span class="s">AC ${p.ac} · init ${sign(+p.init)}</span>
+       <button class="btn quiet danger" data-pcdel="${i}">Remove</button></div>`).join("");
+}
+
+/* ---------- saved encounters ---------- */
+function drawSaved(){
+  const saved = readJSON(K_SAVED, {});
+  const names = Object.keys(saved).sort();
+  $("encPick").innerHTML = names.length
+    ? names.map(n => `<option>${esc(n)}</option>`).join("")
+    : `<option value="">No saved encounters yet</option>`;
+}
+
+/* ---------- events ---------- */
+$("search").addEventListener("input", runSearch);
+$("search").addEventListener("keydown", e => {
+  if (!acHits.length) return;
+  if (e.key === "ArrowDown"){ e.preventDefault(); acIndex = (acIndex + 1) % acHits.length; paintAC(); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); acIndex = (acIndex - 1 + acHits.length) % acHits.length; paintAC(); }
+  else if (e.key === "Enter"){ e.preventDefault(); if (acHits[acIndex]) pick(acHits[acIndex].name); }
+  else if (e.key === "Escape"){ $("acList").innerHTML = ""; acHits = []; }
+});
+function paintAC(){
+  [...document.querySelectorAll(".ac-item")].forEach((el, i) => el.classList.toggle("on", i === acIndex));
+}
+$("acList").addEventListener("mousedown", e => {
+  const el = e.target.closest("[data-pick]");
+  if (el){ e.preventDefault(); pick(el.dataset.pick); }
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".field")) $("acList").innerHTML = "";
+});
+
+$("list").addEventListener("click", e => {
+  const t = e.target;
+  const amt = id => Math.max(0, +(document.querySelector(`[data-amt="${id}"]`)?.value || 0));
+  if (t.dataset.hurt){ const v = amt(t.dataset.hurt); if (v) applyHP(t.dataset.hurt, -v); }
+  else if (t.dataset.heal){ const v = amt(t.dataset.heal); if (v) applyHP(t.dataset.heal, v); }
+  else if (t.dataset.rm){
+    combatants = combatants.filter(c => c.id !== t.dataset.rm);
+    if (activeId === t.dataset.rm) activeId = ordered()[0]?.id ?? null;
+    persist(); render();
+  } else {
+    const w = t.closest("[data-show]");
+    if (w) showStat(w.dataset.show);
+  }
+});
+$("list").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const f = e.target;
+  if (f.dataset.amt){
+    e.preventDefault();
+    const v = Math.max(0, +f.value || 0);
+    if (v) applyHP(f.dataset.amt, e.shiftKey ? v : -v);
+  }
+});
+$("list").addEventListener("change", e => {
+  if (e.target.dataset.init){
+    const c = combatants.find(x => x.id === e.target.dataset.init);
+    if (c){ c.init = +e.target.value || 0; persist(); render(); }
+  }
+});
+
+$("btnNext").addEventListener("click", nextTurn);
+$("btnPrev").addEventListener("click", prevTurn);
+$("btnPC").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); $("pcName").focus(); });
+$("btnParty").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); });
+$("btnSave").addEventListener("click", () => { $("saveSheet").hidden = false; drawSaved(); });
+$("btnClear").addEventListener("click", () => {
+  if (!combatants.length || confirm("Clear everyone and reset to round 1?")){
+    combatants = []; round = 0; activeId = null; persist(); render();
+  }
+});
+$("closeSB").addEventListener("click", () => $("right").classList.remove("open"));
+
+document.addEventListener("click", e => {
+  if (e.target.matches("[data-close]")) e.target.closest(".sheet").hidden = true;
+  if (e.target.matches(".sheet")) e.target.hidden = true;
+});
+
+$("pcAdd").addEventListener("click", () => {
+  const name = $("pcName").value.trim();
+  if (!name) return $("pcName").focus();
+  const party = readJSON(K_PARTY, []);
+  party.push({ name, ac: +$("pcAC").value || 10, init: +$("pcInit").value || 0 });
+  writeJSON(K_PARTY, party);
+  $("pcName").value = ""; drawRoster(); $("pcName").focus();
+});
+$("pcLoadAll").addEventListener("click", () => {
+  const party = readJSON(K_PARTY, []);
+  if (!party.length) return;
+  party.forEach(addPC);
+  persist(); render(); $("partySheet").hidden = true;
+});
+$("roster").addEventListener("click", e => {
+  if (!e.target.dataset.pcdel) return;
+  const party = readJSON(K_PARTY, []);
+  party.splice(+e.target.dataset.pcdel, 1);
+  writeJSON(K_PARTY, party); drawRoster();
+});
+
+$("encSave").addEventListener("click", () => {
+  const n = $("encName").value.trim();
+  if (!n) return $("encName").focus();
+  const saved = readJSON(K_SAVED, {});
+  saved[n] = { combatants, round, activeId, seq };
+  writeJSON(K_SAVED, saved);
+  $("encName").value = ""; drawSaved();
+});
+$("encLoad").addEventListener("click", () => {
+  const saved = readJSON(K_SAVED, {});
+  const d = saved[$("encPick").value];
+  if (!d) return;
+  combatants = d.combatants; round = d.round; activeId = d.activeId; seq = d.seq;
+  persist(); render(); $("saveSheet").hidden = true;
+});
+$("encDel").addEventListener("click", () => {
+  const saved = readJSON(K_SAVED, {});
+  delete saved[$("encPick").value];
+  writeJSON(K_SAVED, saved); drawSaved();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, select, textarea")) return;
+  if (e.key === "/"){ e.preventDefault(); $("search").focus(); }
+  else if (e.key === "n"){ nextTurn(); }
+  else if (e.key === "p"){ prevTurn(); }
+  else if (e.key === "Escape"){ document.querySelectorAll(".sheet").forEach(s => s.hidden = true); }
+});
+
+/* ---------- boot ---------- */
+if (typeof SRD_META !== "undefined" && !SRD_META.complete){
+  const n = $("notice");
+  n.hidden = false;
+  n.textContent = `Sample monster data — ${monsters.length} creatures loaded. `
+    + `Replace srd-monsters.js with the full SRD set to search all of them.`;
+}
+seq = 0;
+restore();
+render();
+$("search").focus();
+</script>
+</body>
+</html>
