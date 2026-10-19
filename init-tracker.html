@@ -144,6 +144,7 @@ body.resizing{user-select:none;cursor:col-resize}
   padding:7px 14px 7px 11px;border-left:3px solid transparent;
   border-bottom:1px solid var(--line);background:var(--ink);
 }
+.cols span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cols .c-init{width:46px;flex:none;text-align:center}
 .cols .c-who{flex:1;min-width:0}
 .cols .c-ac{width:44px;flex:none;text-align:center}
@@ -298,6 +299,12 @@ body.resizing{user-select:none;cursor:col-resize}
 .banner span{flex:1}
 .banner .btn{padding:5px 11px;font-size:12.5px}
 
+.turnbar{display:contents}
+.hpcard .acts .btn{min-height:48px;font-size:15px;font-weight:600}
+#hpDmg{border-color:var(--hp-low);color:var(--hp-low)}
+#hpHeal{border-color:var(--heal);color:var(--heal)}
+#hpAmt{font-size:20px;text-align:center;padding:12px 10px}
+
 /* ---------- guided tour ---------- */
 .tour{position:fixed;inset:0;z-index:80}
 .tour[hidden]{display:none!important}
@@ -348,6 +355,36 @@ body.resizing{user-select:none;cursor:col-resize}
     background:var(--sheet-raised);border-bottom:1px solid var(--sheet-line);text-align:left;font-weight:600}
 }
 @media (min-width:901px){.closesb{display:none}}
+/* ---------- phones ----------
+   Below this width the five-column row can't fit a readable name: the fixed
+   columns alone eat 380px. The inline damage controls move into a tap panel
+   and the turn buttons pin to the bottom, under the thumb. */
+@media (max-width:620px){
+  .c,.cols{gap:8px}
+  .init{width:42px}
+  .cols .c-init{width:42px}
+  .ac{min-width:40px}
+  .cols .c-ac{width:40px}
+
+  .dmg,.hpbtn,.hpfill,.cols .c-adj{display:none}
+  .hpnum{
+    width:62px;min-height:40px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:5px;cursor:pointer;
+  }
+  .hpnum.pcdash{border-color:transparent;cursor:default}
+  .cols .c-hp{width:62px;text-align:center}
+
+  .turnbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    display:flex;gap:8px;padding:10px 12px;
+    background:var(--panel);border-top:1px solid var(--line);
+  }
+  .turnbar .btn{flex:1;padding:13px 10px;font-size:15px}
+  .turnbar #btnNext{flex:2}
+  .left{padding-bottom:62px}
+  .caption{margin-bottom:6px}
+}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -368,8 +405,10 @@ body.resizing{user-select:none;cursor:col-resize}
     <button class="btn quiet" id="btnSave">Encounters</button>
     <button class="btn quiet danger" id="btnClear">Clear</button>
   </div>
-  <button class="btn" id="btnPrev">Back</button>
-  <button class="btn go" id="btnNext">Start combat</button>
+  <div class="turnbar" id="turnbar">
+    <button class="btn" id="btnPrev">Back</button>
+    <button class="btn go" id="btnNext">Start combat</button>
+  </div>
 </header>
 
 <div class="notice" id="notice" hidden></div>
@@ -425,6 +464,21 @@ body.resizing{user-select:none;cursor:col-resize}
     <button class="closesb" id="closeSB">← Back to initiative</button>
     <div class="sb" id="sb"><p class="hint">Pick a monster from the list to read its stat block.</p></div>
   </aside>
+</div>
+
+<!-- damage / heal, phone only -->
+<div class="sheet" id="hpSheet" hidden>
+  <div class="card hpcard">
+    <h3 id="hpName"></h3>
+    <p class="sub" id="hpNow"></p>
+    <label for="hpAmt">Amount</label>
+    <input id="hpAmt" type="number" min="0" inputmode="numeric" placeholder="0">
+    <div class="acts">
+      <button class="btn" id="hpDmg">Damage</button>
+      <button class="btn" id="hpHeal">Heal</button>
+    </div>
+    <div class="acts"><button class="btn quiet" data-close>Done</button></div>
+  </div>
 </div>
 
 <!-- guided tour -->
@@ -688,7 +742,8 @@ function render(){
       <div class="ac"><b>${c.ac}</b><span>AC</span></div>
       ${c.kind === "monster" ? `
         <div class="hp">
-          <div class="hpnum ${bloodied ? "bloodied" : ""}">${c.hp}<small> / ${c.maxHp}</small></div>
+          <div class="hpnum ${bloodied ? "bloodied" : ""}" data-hp="${c.id}"
+               role="button" tabindex="0">${c.hp}<small> / ${c.maxHp}</small></div>
           <input class="dmg" type="number" min="0" data-amt="${c.id}" placeholder="amt"
                  aria-label="Amount of damage or healing for ${c.name}">
           <button class="hpbtn minus" data-hurt="${c.id}"
@@ -953,6 +1008,8 @@ document.addEventListener("click", e => {
 $("list").addEventListener("click", e => {
   const t = e.target;
   const amt = id => Math.max(0, +(document.querySelector(`[data-amt="${id}"]`)?.value || 0));
+  if (t.dataset.hp && PHONE()){ openHP(t.dataset.hp); return; }
+  if (t.closest("[data-hp]") && PHONE()){ openHP(t.closest("[data-hp]").dataset.hp); return; }
   if (t.dataset.hurt){ const v = amt(t.dataset.hurt); if (v) applyHP(t.dataset.hurt, -v); }
   else if (t.dataset.heal){ const v = amt(t.dataset.heal); if (v) applyHP(t.dataset.heal, v); }
   else if (t.dataset.rm){
@@ -1092,8 +1149,10 @@ const TOUR = [
     t: "Click any number to change it and the order re-sorts straight away. Players roll their own, so type what they call out." },
   { sel: "#list .c:first-child .ac", title: "Armour Class",
     t: "Always on screen for everyone in the fight, so you never have to go looking for it mid-turn." },
-  { sel: "#list .c:first-child .hp", title: "Damage and healing",
+  { sel: "#list .c:first-child .hp", title: "Damage and healing", wide: true,
     t: "Type the amount in the <em>amt</em> box, then \u2212 to subtract it or + to heal. <kbd>Enter</kbd> damages, <kbd>Shift</kbd>+<kbd>Enter</kbd> heals. HP turns red at half." },
+  { sel: "#list .c:first-child .hpnum", title: "Damage and healing", narrow: true,
+    t: "Tap the hit points to open the damage panel, enter an amount, then Damage or Heal. It stays open, so two attacks on one creature is two taps. HP turns red at half." },
   { sel: "#list .c:first-child .who", title: "Open a stat block",
     t: "Click a monster's name to read its full entry on the right." },
   { sel: "#right", title: "The stat block", wide: true,
@@ -1266,6 +1325,41 @@ function applyTheme(id){
   applyTheme(sel.value);
   sel.addEventListener("change", () => applyTheme(sel.value));
 })();
+
+/* ---------- damage / heal panel (phones) ----------
+   The inline controls are 26px wide, well under a reliable touch target, so on
+   a phone the HP figure becomes the target and the real controls live here. */
+const PHONE = () => window.innerWidth <= 620;
+let hpTarget = null;
+
+function openHP(id){
+  const c = combatants.find(x => x.id === id);
+  if (!c || c.kind !== "monster") return;
+  hpTarget = id;
+  $("hpName").textContent = c.name;
+  $("hpNow").textContent = `${c.hp} of ${c.maxHp} hit points`;
+  $("hpAmt").value = "";
+  $("hpSheet").hidden = false;
+  $("hpAmt").focus();
+}
+
+function applyFromPanel(sign){
+  const c = combatants.find(x => x.id === hpTarget);
+  const v = Math.max(0, +$("hpAmt").value || 0);
+  if (!c || !v) return;
+  applyHP(hpTarget, sign * v);
+  // stays open: two attacks on one creature in a turn is normal
+  const after = combatants.find(x => x.id === hpTarget);
+  $("hpNow").textContent = `${after.hp} of ${after.maxHp} hit points`;
+  $("hpAmt").value = "";
+  $("hpAmt").focus();
+}
+
+$("hpDmg").addEventListener("click", () => applyFromPanel(-1));
+$("hpHeal").addEventListener("click", () => applyFromPanel(1));
+$("hpAmt").addEventListener("keydown", e => {
+  if (e.key === "Enter"){ e.preventDefault(); applyFromPanel(e.shiftKey ? 1 : -1); }
+});
 
 /* ---------- resizable stat block ---------- */
 const K_WIDTH = "init.sbwidth";
