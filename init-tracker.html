@@ -380,7 +380,9 @@ body.resizing{user-select:none;cursor:col-resize}
     background:var(--panel);border-top:1px solid var(--line);
   }
   .turnbar .btn{flex:1;padding:13px 10px;font-size:15px}
-  .turnbar #btnNext{flex:2}
+  /* Next turn leads on a phone: it's the button pressed every turn,
+     Back only when something was mis-tapped. Desktop keeps Back first. */
+  .turnbar #btnNext{flex:2;order:-1}
   .left{padding-bottom:62px}
   .caption{margin-bottom:6px}
 }
