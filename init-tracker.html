@@ -180,8 +180,13 @@ body.resizing{user-select:none;cursor:col-resize}
 }
 .init:hover{border-color:var(--dim)}
 .init:focus{border-color:var(--accent);background:var(--ink);outline:none}
-.init::-webkit-outer-spin-button,.init::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.init{-moz-appearance:textfield}
+/* No steppers on the in-row number fields: both are typed into, and the
+   arrows eat width the value needs. Qty in the add bar keeps its own. */
+.init::-webkit-outer-spin-button,.init::-webkit-inner-spin-button,
+.dmg::-webkit-outer-spin-button,.dmg::-webkit-inner-spin-button{
+  -webkit-appearance:none;margin:0;
+}
+.init,.dmg{-moz-appearance:textfield;appearance:textfield}
 
 .who{flex:1;min-width:0;cursor:pointer}
 .cname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
