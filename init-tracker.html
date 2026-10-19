@@ -74,6 +74,12 @@ button{cursor:pointer;background:none;border:none}
 .btn.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 .btn.go:hover{filter:brightness(1.08)}
 .btn.quiet{background:none}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:disabled:hover{border-color:var(--line)}
+#btnAdd.ready{
+  background:var(--accent);color:var(--accent-ink);
+  border-color:var(--accent);font-weight:600;
+}
 .btn.danger:hover{border-color:var(--hp-low);color:var(--hp-low)}
 
 /* ---------- layout ---------- */
@@ -376,14 +382,14 @@ body.resizing{user-select:none;cursor:col-resize}
       <div class="addrow">
         <div class="field">
           <input id="search" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="Search monsters by name, then press Enter">
+                 placeholder="Search monsters by name">
           <div class="ac-list" id="acList"></div>
         </div>
-        <div class="qtywrap" title="How many of them to add">
+        <div class="qtywrap" title="How many to add">
           <label for="qty">Qty</label>
           <input class="qty" id="qty" type="number" min="1" max="24" value="1">
         </div>
-        <button class="btn" id="btnPC">Players</button>
+        <button class="btn" id="btnAdd" disabled>Add</button>
       </div>
       <div class="opts">
         <label><input type="checkbox" id="optRollInit" checked>
@@ -648,8 +654,8 @@ function render(){
     box.innerHTML = `<div class="empty">
       <b>Nobody in the fight yet</b>
       <ol>
-        <li>Search a monster above and press Enter. Set <em>Qty</em> first to add several at once.</li>
-        <li>Hit <em>Players</em> to save the party, then drop them all in with one click.</li>
+        <li>Search a monster above, pick it from the list, set <em>Qty</em>, then press <em>Add</em>.</li>
+        <li><em>Party</em> up top saves your characters once, then adds them all in one click.</li>
         <li>Press <em>Start combat</em> when everyone's in.</li>
       </ol>
       <p>Stuck? The <em>?</em> button up top walks you through it.</p></div>`;
@@ -789,10 +795,47 @@ function runSearch(){
     `<div class="ac-item ${i === acIndex ? "on" : ""}" data-pick="${esc(e.key)}">
        <span>${esc(e.label)}</span><small>${esc(e.hint)}</small></div>`).join("");
 }
+/* Choosing a name arms the Add button rather than adding straight away, so the
+   order is find-it-then-say-how-many instead of the other way round. */
+let picked = null;
+
+function closeList(){ $("acList").innerHTML = ""; acHits = []; acIndex = -1; }
+
+function setPicked(key){
+  picked = byKey[key] ? key : null;
+  $("btnAdd").disabled = !picked;
+  $("btnAdd").classList.toggle("ready", !!picked);
+}
+
 function pick(key){
+  const e = byKey[key];
+  if (!e) return;
+  $("search").value = e.name;
+  closeList();
+  setPicked(key);
+  $("qty").focus();
+  $("qty").select();
+}
+
+/* Typing a name and pressing Add without touching the list should still work. */
+function bestMatch(){
+  const q = $("search").value.trim().toLowerCase();
+  if (!q) return null;
+  const hit = catalog.find(e => e.name.toLowerCase() === q)
+    || catalog.filter(e => e.name.toLowerCase().includes(q))
+              .sort((a, b) =>
+                a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q) ||
+                (b.custom - a.custom) ||
+                a.name.localeCompare(b.name))[0];
+  return hit ? hit.key : null;
+}
+
+function commitAdd(){
+  const key = picked || bestMatch();
+  if (!key){ $("search").focus(); return; }
   addMonster(key, Math.max(1, Math.min(24, +$("qty").value || 1)));
-  $("search").value = ""; $("acList").innerHTML = ""; acHits = []; acIndex = -1;
-  $("qty").value = 1;
+  $("search").value = ""; $("qty").value = 1;
+  closeList(); setPicked(null);
   $("search").focus();
 }
 
@@ -873,14 +916,24 @@ function drawSaved(){
 }
 
 /* ---------- events ---------- */
-$("search").addEventListener("input", runSearch);
+$("search").addEventListener("input", () => { setPicked(null); runSearch(); });
 $("search").addEventListener("keydown", e => {
+  if (e.key === "Enter"){
+    e.preventDefault();
+    // first Enter chooses from the list; once chosen, Enter adds
+    if (acHits.length && acHits[acIndex]) pick(acHits[acIndex].key);
+    else commitAdd();
+    return;
+  }
   if (!acHits.length) return;
   if (e.key === "ArrowDown"){ e.preventDefault(); acIndex = (acIndex + 1) % acHits.length; paintAC(); }
   else if (e.key === "ArrowUp"){ e.preventDefault(); acIndex = (acIndex - 1 + acHits.length) % acHits.length; paintAC(); }
-  else if (e.key === "Enter"){ e.preventDefault(); if (acHits[acIndex]) pick(acHits[acIndex].name); }
-  else if (e.key === "Escape"){ $("acList").innerHTML = ""; acHits = []; }
+  else if (e.key === "Escape") closeList();
 });
+$("qty").addEventListener("keydown", e => {
+  if (e.key === "Enter"){ e.preventDefault(); commitAdd(); }
+});
+$("btnAdd").addEventListener("click", commitAdd);
 function paintAC(){
   [...document.querySelectorAll(".ac-item")].forEach((el, i) => el.classList.toggle("on", i === acIndex));
 }
@@ -924,7 +977,6 @@ $("list").addEventListener("change", e => {
 
 $("btnNext").addEventListener("click", nextTurn);
 $("btnPrev").addEventListener("click", prevTurn);
-$("btnPC").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); $("pcName").focus(); });
 $("btnParty").addEventListener("click", () => { $("partySheet").hidden = false; drawRoster(); });
 $("btnSave").addEventListener("click", () => { $("saveSheet").hidden = false; drawSaved(); });
 $("btnBest").addEventListener("click", () => {
@@ -1021,12 +1073,14 @@ document.addEventListener("keydown", e => {
    Steps whose target isn't on screen are dropped automatically, so the
    walkthrough stays honest on a narrow window or an empty encounter. */
 const TOUR = [
-  { sel: "#search", title: "Find a monster",
-    t: "Type any part of a name and press Enter. All 330 creatures from the SRD are here, plus anything you've added yourself." },
-  { sel: ".qtywrap", title: "How many",
-    t: "Set this before you add. Four goblins arrive numbered 1 to 4, sharing one initiative — and if you need two more later, they join the same count." },
-  { sel: "#btnPC", title: "Your party",
-    t: "Save each character once with their AC. After that it's one click to drop the whole party into a fight." },
+  { sel: "#search", title: "1. Find a monster",
+    t: "Type any part of a name, then pick it from the list. All 330 creatures from the SRD are here, plus anything you've added yourself." },
+  { sel: ".qtywrap", title: "2. Say how many",
+    t: "Four goblins arrive numbered 1 to 4, sharing one initiative. Need two more later? Add them again and they join the same count." },
+  { sel: "#btnAdd", title: "3. Add them",
+    t: "Lights up once you've chosen a creature. <kbd>Enter</kbd> does the same thing." },
+  { sel: "#btnParty", title: "Your party", wide: true,
+    t: "Save each character once with their AC. After that it's one click to drop the whole party into a fight, so you only do it the first time." },
   { sel: "#btnBest", title: "Your own creatures", wide: true,
     t: "Homebrew, NPCs, or anything from a book. Give it a name, AC, HP and notes, and it turns up in the search box tagged as custom." },
   { sel: "#list .c:first-child .init", title: "Initiative",
