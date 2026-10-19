@@ -90,6 +90,11 @@ button{cursor:pointer;background:none;border:none}
 body.resizing{user-select:none;cursor:col-resize}
 
 /* ---------- add controls ---------- */
+.caption,.cols{
+  font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);font-weight:600;
+}
+.caption{margin-bottom:8px}
 .add{padding:11px 14px;background:var(--panel);
   border-bottom:1px solid var(--line);flex:none}
 .addrow{display:flex;gap:8px;align-items:stretch}
@@ -100,7 +105,17 @@ body.resizing{user-select:none;cursor:col-resize}
 }
 .field input::placeholder{color:var(--dim)}
 .field input:focus{border-color:var(--accent);outline:none}
-.qty{width:60px;padding:9px 8px;background:var(--raised);border:1px solid var(--line);border-radius:5px;text-align:center}
+.qtywrap{
+  display:flex;align-items:center;gap:7px;padding:0 10px;flex:none;
+  background:var(--raised);border:1px solid var(--line);border-radius:5px;
+}
+.qtywrap label{
+  font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);font-weight:600;cursor:pointer;
+}
+.qtywrap:focus-within{border-color:var(--accent)}
+.qty{width:32px;padding:9px 0;background:none;border:none;text-align:center}
+.qty:focus{outline:none}
 .opts{display:flex;gap:16px;margin-top:9px;font-size:12px;color:var(--dim)}
 .opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .opts input{accent-color:var(--accent)}
@@ -116,10 +131,30 @@ body.resizing{user-select:none;cursor:col-resize}
 .ac-item.on{background:var(--hover)}
 .ac-item small{color:var(--dim);white-space:nowrap}
 
+/* ---------- column headers ----------
+   Widths and gaps mirror .c and its children exactly; change one, change both. */
+.cols{
+  display:flex;align-items:center;gap:11px;flex:none;
+  padding:7px 14px 7px 11px;border-left:3px solid transparent;
+  border-bottom:1px solid var(--line);background:var(--ink);
+}
+.cols .c-init{width:46px;flex:none;text-align:center}
+.cols .c-who{flex:1;min-width:0}
+.cols .c-ac{width:44px;flex:none;text-align:center}
+.cols .c-hpgroup{display:flex;gap:6px;flex:none}
+.cols .c-hp{width:78px;text-align:right}
+.cols .c-adj{width:108px;text-align:center}
+.cols .c-x{width:26px;flex:none}
+
 /* ---------- initiative list ---------- */
 .list{flex:1;overflow-y:auto;min-height:0}
-.empty{padding:44px 24px;text-align:center;color:var(--dim);max-width:34ch;margin:0 auto}
-.empty b{display:block;color:var(--text);font-weight:600;margin-bottom:6px}
+.empty{padding:36px 24px;color:var(--dim);max-width:46ch;margin:0 auto}
+.empty b{display:block;color:var(--text);font-weight:600;font-size:15px;
+  margin-bottom:12px;text-align:center}
+.empty ol{margin:0 0 14px 20px;padding:0}
+.empty li{margin-bottom:7px;line-height:1.5}
+.empty em{color:var(--text);font-style:normal;font-weight:600}
+.empty p{text-align:center;font-size:12.5px}
 
 .c{
   display:flex;align-items:center;gap:11px;
@@ -135,9 +170,9 @@ body.resizing{user-select:none;cursor:col-resize}
 
 .init{
   width:46px;flex:none;text-align:center;font-size:18px;font-weight:600;
-  background:none;border:1px solid transparent;border-radius:4px;padding:3px 0;
+  background:none;border:1px solid var(--line);border-radius:4px;padding:3px 0;
 }
-.init:hover{border-color:var(--line)}
+.init:hover{border-color:var(--dim)}
 .init:focus{border-color:var(--accent);background:var(--ink);outline:none}
 .init::-webkit-outer-spin-button,.init::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .init{-moz-appearance:textfield}
@@ -146,6 +181,10 @@ body.resizing{user-select:none;cursor:col-resize}
 .cname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .csub{font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who.static{cursor:default}
+/* quiet chevron marks the rows that open a stat block */
+.who[data-show] .cname::after{content:"\00a0\203A";color:var(--dim);font-weight:400}
+.who[data-show]:hover .cname,
+.who[data-show]:hover .cname::after{color:var(--accent)}
 
 .ac{
   flex:none;display:flex;flex-direction:column;align-items:center;
@@ -155,7 +194,7 @@ body.resizing{user-select:none;cursor:col-resize}
 .ac span{font-size:9.5px;color:var(--dim);letter-spacing:.05em}
 
 .hp{flex:none;display:flex;align-items:center;gap:6px}
-.hpnum{min-width:64px;text-align:right;font-size:15px;font-weight:600}
+.hpnum{width:78px;text-align:right;font-size:15px;font-weight:600}
 .hpnum small{color:var(--dim);font-weight:400;font-size:12px}
 .hpnum.bloodied{color:var(--hp-low)}
 .dmg{width:44px;padding:6px 4px;text-align:center;background:var(--ink);border:1px solid var(--line);border-radius:4px}
@@ -171,7 +210,8 @@ body.resizing{user-select:none;cursor:col-resize}
 .hpbtn:hover{background:var(--hover)}
 .kill{flex:none;width:26px;color:var(--dim);font-size:16px}
 .kill:hover{color:var(--hp-low)}
-.pcdash{min-width:64px;text-align:right;color:var(--dim)}
+.pcdash{color:var(--dim)}
+.hpfill{width:108px;flex:none}
 
 /* ---------- stat block ---------- */
 .sb{padding:16px 18px 40px}
@@ -238,6 +278,14 @@ body.resizing{user-select:none;cursor:col-resize}
    before. Narrow: it becomes a dropdown and the burger appears. */
 .group{display:contents}
 .more{display:none;font-size:15px;padding:6px 11px}
+
+.banner{
+  display:flex;align-items:center;gap:10px;flex:none;
+  padding:9px 14px;font-size:13px;
+  background:var(--accent-soft);border-bottom:1px solid var(--line);
+}
+.banner span{flex:1}
+.banner .btn{padding:5px 11px;font-size:12.5px}
 
 /* ---------- guided tour ---------- */
 .tour{position:fixed;inset:0;z-index:80}
@@ -315,22 +363,40 @@ body.resizing{user-select:none;cursor:col-resize}
 
 <div class="notice" id="notice" hidden></div>
 
+<div class="banner" id="banner" hidden>
+  <span>New here? The quick tour walks you through running a fight.</span>
+  <button class="btn go" id="bannerTour">Take the tour</button>
+  <button class="btn quiet" id="bannerHide">No thanks</button>
+</div>
+
 <div class="main">
   <div class="left">
     <div class="add">
+      <div class="caption">Add to the fight</div>
       <div class="addrow">
         <div class="field">
           <input id="search" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="Search monsters — type a name, press Enter to add">
+                 placeholder="Search monsters by name, then press Enter">
           <div class="ac-list" id="acList"></div>
         </div>
-        <input class="qty" id="qty" type="number" min="1" max="24" value="1" title="How many">
-        <button class="btn" id="btnPC">Add player</button>
+        <div class="qtywrap" title="How many of them to add">
+          <label for="qty">Qty</label>
+          <input class="qty" id="qty" type="number" min="1" max="24" value="1">
+        </div>
+        <button class="btn" id="btnPC">Players</button>
       </div>
       <div class="opts">
         <label><input type="checkbox" id="optRollInit" checked>
-          Roll initiative (uncheck to use the average from the stat block)</label>
+          Roll initiative (uncheck to use the stat block average)</label>
       </div>
+    </div>
+
+    <div class="cols" id="cols" aria-hidden="true">
+      <span class="c-init">Init</span>
+      <span class="c-who">Creature</span>
+      <span class="c-ac">AC</span>
+      <span class="c-hpgroup"><span class="c-hp">HP</span><span class="c-adj">Damage / Heal</span></span>
+      <span class="c-x"></span>
     </div>
 
     <div class="list" id="list"></div>
@@ -579,11 +645,19 @@ function render(){
   const box = $("list");
 
   if (!list.length){
-    box.innerHTML = `<div class="empty"><b>Nobody in the fight yet.</b>
-      Search a monster above to add it, or use <em>Add player</em> for the party.</div>`;
+    box.innerHTML = `<div class="empty">
+      <b>Nobody in the fight yet</b>
+      <ol>
+        <li>Search a monster above and press Enter. Set <em>Qty</em> first to add several at once.</li>
+        <li>Hit <em>Players</em> to save the party, then drop them all in with one click.</li>
+        <li>Press <em>Start combat</em> when everyone's in.</li>
+      </ol>
+      <p>Stuck? The <em>?</em> button up top walks you through it.</p></div>`;
+    $("cols").style.display = "none";
     return;
   }
 
+  $("cols").style.display = "";
   box.innerHTML = "";
   for (const c of list){
     const row = document.createElement("div");
@@ -595,7 +669,8 @@ function render(){
     row.innerHTML = `
       <input class="init" type="number" value="${c.init}" data-init="${c.id}"
              title="Initiative — click to change" aria-label="Initiative for ${c.name}">
-      <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster" ? `data-show="${c.id}"` : ""}>
+      <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster"
+          ? `data-show="${c.id}" title="Open the stat block for ${esc(c.name)}"` : ""}>
         <div class="cname">${esc(c.name)}</div>
         <div class="csub">${esc(c.sub)}</div>
       </div>
@@ -603,11 +678,14 @@ function render(){
       ${c.kind === "monster" ? `
         <div class="hp">
           <div class="hpnum ${bloodied ? "bloodied" : ""}">${c.hp}<small> / ${c.maxHp}</small></div>
-          <input class="dmg" type="number" min="0" data-amt="${c.id}" placeholder="0"
+          <input class="dmg" type="number" min="0" data-amt="${c.id}" placeholder="amt"
                  aria-label="Amount of damage or healing for ${c.name}">
-          <button class="hpbtn minus" data-hurt="${c.id}" title="Apply damage">−</button>
-          <button class="hpbtn plus"  data-heal="${c.id}" title="Heal">+</button>
-        </div>` : `<div class="pcdash">—</div>`}
+          <button class="hpbtn minus" data-hurt="${c.id}"
+                  title="Subtract that amount (damage)">−</button>
+          <button class="hpbtn plus"  data-heal="${c.id}"
+                  title="Add that amount (healing)">+</button>
+        </div>` : `<div class="hp"><div class="hpnum pcdash">—</div>
+             <span class="hpfill"></span></div>`}
       <button class="kill" data-rm="${c.id}" title="Remove from combat" aria-label="Remove ${c.name}">×</button>`;
     box.appendChild(row);
   }
@@ -945,7 +1023,7 @@ document.addEventListener("keydown", e => {
 const TOUR = [
   { sel: "#search", title: "Find a monster",
     t: "Type any part of a name and press Enter. All 330 creatures from the SRD are here, plus anything you've added yourself." },
-  { sel: "#qty", title: "How many",
+  { sel: ".qtywrap", title: "How many",
     t: "Set this before you add. Four goblins arrive numbered 1 to 4, sharing one initiative — and if you need two more later, they join the same count." },
   { sel: "#btnPC", title: "Your party",
     t: "Save each character once with their AC. After that it's one click to drop the whole party into a fight." },
@@ -956,7 +1034,7 @@ const TOUR = [
   { sel: "#list .c:first-child .ac", title: "Armour Class",
     t: "Always on screen for everyone in the fight, so you never have to go looking for it mid-turn." },
   { sel: "#list .c:first-child .hp", title: "Damage and healing",
-    t: "Type a number, then \u2212 to subtract it or + to heal. <kbd>Enter</kbd> damages, <kbd>Shift</kbd>+<kbd>Enter</kbd> heals. HP turns red at half." },
+    t: "Type the amount in the <em>amt</em> box, then \u2212 to subtract it or + to heal. <kbd>Enter</kbd> damages, <kbd>Shift</kbd>+<kbd>Enter</kbd> heals. HP turns red at half." },
   { sel: "#list .c:first-child .who", title: "Open a stat block",
     t: "Click a monster's name to read its full entry on the right." },
   { sel: "#right", title: "The stat block", wide: true,
@@ -1067,6 +1145,13 @@ document.addEventListener("click", e => {
 });
 
 $("btnHelp").addEventListener("click", openTour);
+
+/* First visit on this browser gets one offer of the tour, then never again. */
+const K_SEEN = "init.seen";
+function dismissBanner(){ store.set(K_SEEN, "1"); $("banner").hidden = true; }
+if (!store.get(K_SEEN)) $("banner").hidden = false;
+$("bannerTour").addEventListener("click", () => { dismissBanner(); openTour(); });
+$("bannerHide").addEventListener("click", dismissBanner);
 $("tourNext").addEventListener("click", () => stepTour(1));
 $("tourBack").addEventListener("click", () => stepTour(-1));
 $("tour").addEventListener("click", e => { if (e.target.id === "tour") closeTour(); });
