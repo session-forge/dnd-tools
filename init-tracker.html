@@ -174,6 +174,10 @@ body.resizing{user-select:none;cursor:col-resize}
 .c.active .cname{color:var(--accent)}
 .c.down{opacity:.42}
 .c.down .cname{text-decoration:line-through}
+/* unconscious, not dead: a downed player is still in the fight */
+.c.down.uncon{opacity:.62}
+.c.down.uncon .cname{text-decoration:none}
+.c.down.uncon .csub{color:var(--hp-low)}
 
 .init{
   width:46px;flex:none;text-align:center;font-size:18px;font-weight:600;
@@ -209,6 +213,23 @@ body.resizing{user-select:none;cursor:col-resize}
 .hpnum{width:78px;text-align:right;font-size:15px;font-weight:600}
 .hpnum small{color:var(--dim);font-weight:400;font-size:12px}
 .hpnum.bloodied{color:var(--hp-low)}
+
+/* death saves: occupies exactly the HP figure's 78px so the row stays aligned */
+.ds{width:78px;flex:none;display:flex;flex-direction:column;gap:3px;align-items:center}
+.dsrow{display:flex;gap:4px}
+.pip{
+  width:15px;height:15px;border-radius:50%;padding:0;
+  border:1.5px solid var(--line);background:none;
+}
+.pip:hover{border-color:var(--dim)}
+.pip.ok.on{background:var(--heal);border-color:var(--heal)}
+.pip.bad.on{background:var(--hp-low);border-color:var(--hp-low)}
+.dsword{
+  width:78px;flex:none;text-align:center;font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+}
+.dsword.stable{color:var(--heal)}
+.dsword.dead{color:var(--hp-low)}
 .dmg{width:44px;padding:6px 4px;text-align:center;background:var(--ink);border:1px solid var(--line);border-radius:4px}
 .dmg:focus{border-color:var(--accent);outline:none}
 .hpbtn{
@@ -224,6 +245,31 @@ body.resizing{user-select:none;cursor:col-resize}
 .kill:hover{color:var(--hp-low)}
 .pcdash{color:var(--dim)}
 .hpfill{width:108px;flex:none}
+
+/* ---------- death save cell ----------
+   Sits where the HP figure normally does, so the damage and heal controls
+   beside it stay put and a downed character can still be healed. */
+function downLabel(c){
+  const ds = dsOf(c);
+  return ds.dead ? "Dead" : ds.stable ? "Stable" : "Down \u2014 death saves";
+}
+
+function dsCell(c){
+  const ds = dsOf(c);
+  if (ds.dead || ds.stable)
+    return `<div class="dsword ${ds.dead ? "dead" : "stable"}" data-hp="${c.id}"
+                 data-ds="${c.id}|undo|0" role="button" tabindex="0"
+                 title="Click to clear and go back to tracking saves"
+                 >${ds.dead ? "Dead" : "Stable"}</div>`;
+  const row = (which, n, cls) =>
+    `<span class="dsrow">${[1, 2, 3].map(i =>
+      `<button class="pip ${cls} ${ds[which] >= i ? "on" : ""}"
+               data-ds="${c.id}|${which}|${i}"
+               aria-label="${n} ${i} for ${esc(c.name)}"></button>`).join("")}</span>`;
+  return `<div class="ds" data-hp="${c.id}">
+            ${row("s", "Success", "ok")}${row("f", "Failure", "bad")}
+          </div>`;
+}
 
 /* ---------- stat block ---------- */
 .sb{padding:16px 18px 40px}
@@ -304,6 +350,20 @@ body.resizing{user-select:none;cursor:col-resize}
 #hpDmg{border-color:var(--hp-low);color:var(--hp-low)}
 #hpHeal{border-color:var(--heal);color:var(--heal)}
 #hpAmt{font-size:20px;text-align:center;padding:12px 10px}
+.dsbig{
+  display:flex;flex-direction:column;gap:9px;padding:11px;
+  background:var(--raised);border:1px solid var(--line);border-radius:6px;
+}
+.dsbigrow{display:flex;align-items:center;gap:10px}
+.dsbiglab{flex:1;font-size:13px;color:var(--dim)}
+.dsbiglab.ok{color:var(--heal)}
+.dsbiglab.bad{color:var(--hp-low)}
+/* full-size targets here, unlike the 15px pips in the row */
+.dsbig .pip{width:30px;height:30px;border-width:2px;pointer-events:auto}
+.dsbig .dsrow{gap:8px}
+.dsnote{margin-top:8px;font-size:12.5px;text-align:center;color:var(--dim)}
+.dsnote.stable{color:var(--heal)}
+.dsnote.dead{color:var(--hp-low)}
 
 /* ---------- guided tour ---------- */
 .tour{position:fixed;inset:0;z-index:80}
@@ -372,6 +432,13 @@ body.resizing{user-select:none;cursor:col-resize}
     border:1px solid var(--line);border-radius:5px;cursor:pointer;
   }
   .hpnum.pcdash{border-color:transparent;cursor:default}
+  .ds,.dsword{
+    width:62px;min-height:40px;justify-content:center;
+    border:1px solid var(--line);border-radius:5px;
+  }
+  .ds{padding:4px 0}
+  .dsword{display:flex;align-items:center;font-size:11px}
+  .pip{pointer-events:none}      /* too small to tap: the panel owns editing */
   .cols .c-hp{width:62px;text-align:center}
 
   .turnbar{
@@ -473,6 +540,19 @@ body.resizing{user-select:none;cursor:col-resize}
   <div class="card hpcard">
     <h3 id="hpName"></h3>
     <p class="sub" id="hpNow"></p>
+
+    <div id="hpDS" hidden>
+      <label>Death saves</label>
+      <div class="dsbig" id="dsBig">
+        <div class="dsbigrow"><span class="dsbiglab ok">Successes</span>
+          <span class="dsrow" id="dsS"></span></div>
+        <div class="dsbigrow"><span class="dsbiglab bad">Failures</span>
+          <span class="dsrow" id="dsF"></span></div>
+      </div>
+      <button class="btn quiet" id="dsUndo" hidden>Clear and track saves again</button>
+      <p class="dsnote" id="dsNote"></p>
+    </div>
+
     <label for="hpAmt">Amount</label>
     <input id="hpAmt" type="number" min="0" inputmode="numeric" placeholder="0">
     <div class="acts">
@@ -502,11 +582,13 @@ body.resizing{user-select:none;cursor:col-resize}
 <div class="sheet" id="partySheet" hidden>
   <div class="card">
     <h3>Party roster</h3>
-    <p class="sub">Saved on this computer. Add everyone once, then load them each session.</p>
-    <div class="trio">
+    <p class="sub">Saved on this computer. Add everyone once, then load them each session.
+      Max HP is optional — fill it in if you want to track their hit points too.</p>
+    <div class="quad">
       <div><label for="pcName">Character</label><input id="pcName" placeholder="Thorn"></div>
       <div><label for="pcAC">AC</label><input id="pcAC" type="number" value="15"></div>
-      <div><label for="pcInit">Init bonus</label><input id="pcInit" type="number" value="2"></div>
+      <div><label for="pcHP">Max HP</label><input id="pcHP" type="number" min="0" placeholder="—"></div>
+      <div><label for="pcInit">Init</label><input id="pcInit" type="number" value="2"></div>
     </div>
     <div class="acts">
       <button class="btn" id="pcAdd">Save to roster</button>
@@ -660,9 +742,11 @@ function addMonster(key, count){
 }
 
 function addPC(pc){
+  const max = Math.max(0, +pc.hp || 0);
   combatants.push({
     id: uid(), seq: seq, kind: "pc", name: pc.name,
-    ac: +pc.ac || 10, initMod: +pc.init || 0, init: 0, sub: "Player character"
+    ac: +pc.ac || 10, initMod: +pc.init || 0, init: 0, sub: "Player character",
+    hp: max, maxHp: max, ds: null
   });
 }
 
@@ -693,11 +777,60 @@ function scrollToActive(){
   if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-/* ---------- hp ---------- */
+/* ---------- hp ----------
+   Anyone with a max is tracked, monster or player. Players saved before HP
+   existed have no max, so they keep showing a dash until it's filled in. */
+const hasHP = c => c && c.maxHp > 0;
+
+/* ---------- death saves (players at 0 HP) ----------
+   SRD 5.2.1: three successes and the character is Stable; three failures and
+   they die. Taking damage at 0 costs a failure, and damage at or above their
+   HP maximum kills outright. Any healing clears the lot. */
+const isDown = c => c && c.kind === "pc" && hasHP(c) && c.hp === 0;
+const blankDS = () => ({ s: 0, f: 0, stable: false, dead: false });
+const dsOf = c => c.ds || blankDS();
+
+function writeDS(c, ds){
+  // dead is derived from the count every time, so clearing a pip undoes it
+  ds.dead = ds.f >= 3;
+  if (ds.s >= 3){
+    // SRD: on becoming Stable the counts reset to zero. The row shows the word
+    // rather than pips at that point, so nothing visibly disappears.
+    ds.stable = true; ds.dead = false; ds.s = 0; ds.f = 0;
+  }
+  c.ds = ds;
+}
+
+/* Clicking the pip that's already the last one filled clears it, so a
+   mis-click costs one click to undo. "undo" clears a Stable or Dead verdict. */
+function setDS(id, which, n){
+  const c = combatants.find(x => x.id === id);
+  if (!isDown(c)) return;
+  if (which === "undo"){ c.ds = blankDS(); persist(); render(); return; }
+  const ds = { ...dsOf(c) };
+  ds[which] = ds[which] === n ? n - 1 : n;
+  writeDS(c, ds);
+  persist(); render();
+}
+
 function applyHP(id, delta){
   const c = combatants.find(x => x.id === id);
-  if (!c || c.kind !== "monster") return;
+  if (!hasHP(c)) return;
+
+  const wasDown = isDown(c);
   c.hp = Math.max(0, Math.min(c.maxHp, c.hp + delta));
+
+  if (c.kind === "pc"){
+    if (c.hp > 0){
+      c.ds = null;                               // any healing clears the slate
+    } else if (wasDown && delta < 0){
+      // damage taken while already at 0
+      const ds = { ...dsOf(c), stable: false };
+      if (-delta >= c.maxHp) ds.dead = true;     // damage at or above the max
+      else if (++ds.f >= 3) ds.dead = true;
+      c.ds = ds;
+    }
+  }
   persist(); render();
 }
 
@@ -728,10 +861,14 @@ function render(){
   box.innerHTML = "";
   for (const c of list){
     const row = document.createElement("div");
+    const out = hasHP(c) && c.hp === 0;
     row.className = "c" + (c.id === activeId ? " active" : "")
-                       + (c.kind === "monster" && c.hp === 0 ? " down" : "");
+                       + (out ? " down" : "")
+                       // a player at 0 is unconscious and rolling death saves,
+                       // so they don't get the struck-through "dead" treatment
+                       + (out && c.kind === "pc" ? " uncon" : "");
 
-    const bloodied = c.kind === "monster" && c.hp > 0 && c.hp <= c.maxHp / 2;
+    const bloodied = hasHP(c) && c.hp > 0 && c.hp <= c.maxHp / 2;
 
     row.innerHTML = `
       <input class="init" type="number" value="${c.init}" data-init="${c.id}"
@@ -739,13 +876,14 @@ function render(){
       <div class="who ${c.kind === "pc" ? "static" : ""}" ${c.kind === "monster"
           ? `data-show="${c.id}" title="Open the stat block for ${esc(c.name)}"` : ""}>
         <div class="cname">${esc(c.name)}</div>
-        <div class="csub">${esc(c.sub)}</div>
+        <div class="csub">${isDown(c) ? downLabel(c) : esc(c.sub)}</div>
       </div>
       <div class="ac"><b>${c.ac}</b><span>AC</span></div>
-      ${c.kind === "monster" ? `
+      ${hasHP(c) ? `
         <div class="hp">
+          ${isDown(c) ? dsCell(c) : `
           <div class="hpnum ${bloodied ? "bloodied" : ""}" data-hp="${c.id}"
-               role="button" tabindex="0">${c.hp}<small> / ${c.maxHp}</small></div>
+               role="button" tabindex="0">${c.hp}<small> / ${c.maxHp}</small></div>`}
           <input class="dmg" type="number" min="0" data-amt="${c.id}" placeholder="amt"
                  aria-label="Amount of damage or healing for ${c.name}">
           <button class="hpbtn minus" data-hurt="${c.id}"
@@ -759,6 +897,31 @@ function render(){
   }
 }
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
+
+/* ---------- death save cell ----------
+   Sits where the HP figure normally does, so the damage and heal controls
+   beside it stay put and a downed character can still be healed. */
+function downLabel(c){
+  const ds = dsOf(c);
+  return ds.dead ? "Dead" : ds.stable ? "Stable" : "Down \u2014 death saves";
+}
+
+function dsCell(c){
+  const ds = dsOf(c);
+  if (ds.dead || ds.stable)
+    return `<div class="dsword ${ds.dead ? "dead" : "stable"}" data-hp="${c.id}"
+                 data-ds="${c.id}|undo|0" role="button" tabindex="0"
+                 title="Click to clear and go back to tracking saves"
+                 >${ds.dead ? "Dead" : "Stable"}</div>`;
+  const row = (which, n, cls) =>
+    `<span class="dsrow">${[1, 2, 3].map(i =>
+      `<button class="pip ${cls} ${ds[which] >= i ? "on" : ""}"
+               data-ds="${c.id}|${which}|${i}"
+               aria-label="${n} ${i} for ${esc(c.name)}"></button>`).join("")}</span>`;
+  return `<div class="ds" data-hp="${c.id}">
+            ${row("s", "Success", "ok")}${row("f", "Failure", "bad")}
+          </div>`;
+}
 
 /* ---------- stat block ---------- */
 function showStatFor(id, reveal = true){
@@ -915,7 +1078,7 @@ function drawRoster(){
   const party = readJSON(K_PARTY, []);
   $("roster").innerHTML = party.map((p, i) =>
     `<div class="pcrow"><span class="n">${esc(p.name)}</span>
-       <span class="s">AC ${p.ac} · init ${sign(+p.init)}</span>
+       <span class="s">AC ${p.ac} · ${p.hp > 0 ? p.hp + " HP" : "no HP"} · init ${sign(+p.init)}</span>
        <button class="btn quiet danger" data-pcdel="${i}">Remove</button></div>`).join("");
 }
 
@@ -1010,6 +1173,10 @@ document.addEventListener("click", e => {
 $("list").addEventListener("click", e => {
   const t = e.target;
   const amt = id => Math.max(0, +(document.querySelector(`[data-amt="${id}"]`)?.value || 0));
+  if (t.dataset.ds && !PHONE()){
+    const [id, which, n] = t.dataset.ds.split("|");
+    setDS(id, which, +n); return;
+  }
   if (t.dataset.hp && PHONE()){ openHP(t.dataset.hp); return; }
   if (t.closest("[data-hp]") && PHONE()){ openHP(t.closest("[data-hp]").dataset.hp); return; }
   if (t.dataset.hurt){ const v = amt(t.dataset.hurt); if (v) applyHP(t.dataset.hurt, -v); }
@@ -1078,9 +1245,11 @@ $("pcAdd").addEventListener("click", () => {
   const name = $("pcName").value.trim();
   if (!name) return $("pcName").focus();
   const party = readJSON(K_PARTY, []);
-  party.push({ name, ac: +$("pcAC").value || 10, init: +$("pcInit").value || 0 });
+  party.push({ name, ac: +$("pcAC").value || 10,
+               hp: Math.max(0, +$("pcHP").value || 0),
+               init: +$("pcInit").value || 0 });
   writeJSON(K_PARTY, party);
-  $("pcName").value = ""; drawRoster(); $("pcName").focus();
+  $("pcName").value = ""; $("pcHP").value = ""; drawRoster(); $("pcName").focus();
 });
 $("pcLoadAll").addEventListener("click", () => {
   const party = readJSON(K_PARTY, []);
@@ -1144,7 +1313,7 @@ const TOUR = [
   { sel: "#btnAdd", title: "3. Add them",
     t: "Lights up once you've chosen a creature. <kbd>Enter</kbd> does the same thing." },
   { sel: "#btnParty", title: "Your party", wide: true,
-    t: "Save each character once with their AC. After that it's one click to drop the whole party into a fight, so you only do it the first time." },
+    t: "Save each character once with their AC, and their max HP if you want to track it. After that it's one click to drop the whole party into a fight." },
   { sel: "#btnBest", title: "Your own creatures", wide: true,
     t: "Homebrew, NPCs, or anything from a book. Give it a name, AC, HP and notes, and it turns up in the search box tagged as custom." },
   { sel: "#list .c:first-child .init", title: "Initiative",
@@ -1336,14 +1505,53 @@ let hpTarget = null;
 
 function openHP(id){
   const c = combatants.find(x => x.id === id);
-  if (!c || c.kind !== "monster") return;
+  if (!hasHP(c)) return;
   hpTarget = id;
   $("hpName").textContent = c.name;
-  $("hpNow").textContent = `${c.hp} of ${c.maxHp} hit points`;
   $("hpAmt").value = "";
+  paintHP();
   $("hpSheet").hidden = false;
-  $("hpAmt").focus();
+  if (!isDown(c)) $("hpAmt").focus();
 }
+
+/* Redraws the panel from state, so it stays right after damage or a pip. */
+function paintHP(){
+  const c = combatants.find(x => x.id === hpTarget);
+  if (!c) return;
+  $("hpNow").textContent = `${c.hp} of ${c.maxHp} hit points`;
+  const down = isDown(c);
+  $("hpDS").hidden = !down;
+  if (!down) return;
+
+  const ds = dsOf(c);
+  const done = ds.dead || ds.stable;
+  $("dsBig").hidden = done;
+  $("dsUndo").hidden = !done;
+
+  if (!done){
+    const fill = (el, which) => $(el).innerHTML = [1, 2, 3].map(i =>
+      `<button class="pip ${which === "s" ? "ok" : "bad"} ${ds[which] >= i ? "on" : ""}"
+               data-ds="${c.id}|${which}|${i}"
+               aria-label="${which === "s" ? "Success" : "Failure"} ${i}"></button>`).join("");
+    fill("dsS", "s"); fill("dsF", "f");
+  } else {
+    $("dsUndo").dataset.ds = `${c.id}|undo|0`;
+  }
+
+  const note = $("dsNote");
+  note.className = "dsnote" + (ds.dead ? " dead" : ds.stable ? " stable" : "");
+  note.textContent = ds.dead ? "Dead."
+    : ds.stable ? "Stable. No more death saves, still unconscious."
+    : "Three successes to stabilise, three failures and they're gone.";
+}
+
+$("hpDS").addEventListener("click", e => {
+  const el = e.target.closest("[data-ds]");
+  if (!el) return;
+  const [id, which, n] = el.dataset.ds.split("|");
+  setDS(id, which, +n);
+  paintHP();
+});
 
 function applyFromPanel(sign){
   const c = combatants.find(x => x.id === hpTarget);
@@ -1351,10 +1559,9 @@ function applyFromPanel(sign){
   if (!c || !v) return;
   applyHP(hpTarget, sign * v);
   // stays open: two attacks on one creature in a turn is normal
-  const after = combatants.find(x => x.id === hpTarget);
-  $("hpNow").textContent = `${after.hp} of ${after.maxHp} hit points`;
   $("hpAmt").value = "";
-  $("hpAmt").focus();
+  paintHP();
+  if (!isDown(combatants.find(x => x.id === hpTarget))) $("hpAmt").focus();
 }
 
 $("hpDmg").addEventListener("click", () => applyFromPanel(-1));
